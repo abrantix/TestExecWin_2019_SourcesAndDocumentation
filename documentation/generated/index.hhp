@@ -1,0 +1,79 @@
+[OPTIONS]
+Compiled file=C:\MyTemp\DocGenerated\TestExecWin\TestExecWin.chm
+Compatibility=1.1
+Full-text search=Yes
+Contents file=index.hhc
+Default Window=main
+Default topic=index.html
+Index file=index.hhk
+Language=0x409 English (United States)
+Title=TestExecWindow
+
+[WINDOWS]
+main="TestExecWindow","index.hhc","index.hhk","index.html","index.html",,,,,0x23520,,0x10387e,,,,,,,,0
+
+[FILES]
+group___grp_installation.html
+group___grp_user_guide.html
+group___grp_open_test_exec_window.html
+group___grp_user_interface.html
+group___grp_user_interface_batch.html
+group___grp_extended_settings.html
+group___grp_typical_test_activities.html
+group___grp_parsing_soure_files.html
+group___grp_visual_studio_extension.html
+group___grp_package.html
+group___grp_visual_studio_connector.html
+group___grp_parser.html
+group___grp_executor.html
+group___grp_common_functionality.html
+group___grp_multi_threading.html
+group___grp_design.html
+group___grp_sources.html
+group___grp_source_executor.html
+group___grp_source_source_file_parser.html
+group___grp_test_exec_window.html
+group___grp_test_exec_window_command.html
+group___grp_test_exec_window_control_xaml.html
+group___grp_test_exec_window_control_xaml_cs.html
+group___grp_test_exec_window_package.html
+group___grp_source_visual_studio_connector.html
+group___grp_hidden_pages.html
+index.html
+modules.html
+tab_a.png
+tab_b.png
+tab_h.png
+tab_s.png
+nav_h.png
+nav_f.png
+bc_s.png
+doxygen.png
+closed.png
+open.png
+bdwn.png
+sync_on.png
+sync_off.png
+ftv2blank.png
+ftv2doc.png
+ftv2folderclosed.png
+ftv2folderopen.png
+ftv2lastnode.png
+ftv2link.png
+ftv2mlastnode.png
+ftv2mnode.png
+ftv2node.png
+ftv2plastnode.png
+ftv2pnode.png
+ftv2vertline.png
+ftv2splitbar.png
+OpenTestExecWindow.png
+Preview.png
+TestApps.png
+MoreOptions.png
+OnlyBoostTestSuites.png
+SettingsForDocPictures.png
+ManifestEditor.png
+TestExecWin.ico
+TestExecWindowCommand.png
+TestExecWinPresentation.png

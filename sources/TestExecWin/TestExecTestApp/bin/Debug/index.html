@@ -1,0 +1,214 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+
+    <link rel="stylesheet" type="text/css" href="stylesheet.css" media="screen">
+
+    <title>TestExecWindow</title>
+</head>
+
+<body>
+    <div class="container">
+        <div id="header">
+            <h1>Getting Started with TestExecWindow</h1>
+        </div>
+
+        <div id="main_content">
+            <div id="lpanel">
+                <h2>Basic functionaity</h2>
+
+                <p>
+                    Every time you change the startup project within your Visual Studio solution TestExecWin will
+                    automatically check if there are any test cases to run. All found test cases are presented within the TestExecWindow
+                    and can there be selected for execution.
+                    TestExecWin supports BOOST.Test (and proprietary TTB) testing frameworks.
+                    Depending on the framework type appropriate command params are used for executing selected test cases.
+                    The test output is written to a special tab within the Visual Studio output pane.
+                </p>
+
+                <p>
+                    Furthermore you can manage simple batch files to sequentially execute <strong>multiple test applications</strong> of arbitrary type.
+                    Their execution result is written to output pane.
+                    Optionally you can decide to <strong>automatically shutdown</strong> your computer when all tests have terminated. Before shutdown the results
+                    from output pane are saved to a logfile for later inspection.
+                </p>
+
+
+                <h2>Installation</h2>
+                <p />
+                <ol>
+                    <li>Within Visual Studion deinstall an old version of "TestExecWindow" if already existing.</li>
+                    <li>Close Visual Studio.</li>
+                    <li>Double-Click downloaded installation file "TestExecWin.vsix". Confirm to install the extension.</li>
+                    <li>Restart Visual Studio.</li>
+                    <li>
+                        Open the installed window via Menu View / Other windows / TestExecWindow:<br />
+                        <p><img src="Resources/OpenTestExecWindow.png" alt="OpenTestExecWindow"></p>
+                    </li>
+                    <li>Use the window as a free floating window or choose any pane within Visual Studio you find suited for attaching it.</li>
+                </ol>
+
+                <h2>User interface</h2>
+
+                Depending on your test application TestExecWin will show up similar to the following screenshot:
+
+                <p><img src="Resources/Instruction.png" alt="Screenshot" /></p>
+
+                <h3>Upper Row: Current startup project</h3>
+                <ul>
+                    <li>
+                        <strong>TestXmlCheckWithPugiXml - Debug</strong><br>
+                        Name of current startup project and currently selected configuration<br>
+                    </li>
+                    <li>
+                        <strong>Checkbox "Debug"</strong><br>
+                        Choose whether to start test within debugger or to execute it regularly<br>
+                    </li>
+
+                    <li>
+                        <strong>Run</strong><br>
+                        Run all tests; test application is started and only default args are used<br>
+                    </li>
+                    <li>
+                        <strong>Out</strong><br>
+                        Open test protocol file (assumption: YourTestApp.exe generates protocol file YourTestApp.out within target directory)<br>
+                    </li>
+                    <li>
+                        <strong>Refresh</strong><br>
+                        Manually refresh of all data (e.g. when you have just added new test cases to your source code)<br>
+                    </li>
+                    <li>
+                        <strong>Button "..."</strong><br>
+                        Show/hide additional settings<br>
+                    </li>
+                </ul>
+
+                <h3>Middle part: Test suites and test cases</h3>
+
+                The left / right list contains all BOOST test suites / test cases defined in the current
+                startup project.
+
+                <ul>
+                    <li>
+                        <strong>Check box "within suite"</strong><br>
+                        You can decide whether to show all BOOST test cases or only those contained within
+                        the selected BOOST test suite<br />
+                    </li>
+                    <li>
+                        <strong>Colored status fields "FAILED/OK"</strong><br>
+                        Execution status of the last test execution<br />
+                    </li>
+                    <li>
+                        <strong>Text field "--runTest="</strong><br>
+                        Command line parameter which is automatically set when selecting one or more items within the list above.
+                        You can manually edit the parameter (e.g. for adding additional options)<br />
+                    </li>
+                    <li>
+                        <strong>Run selected</strong><br>
+                        starts the test executable by using the commmand line above. You can select one or more test suites / test cases
+                        to be executed within a single call to your test executable<br />
+                    </li>
+                    <li>
+                        <strong>Run each</strong><br>
+                        sequentially executes all test suites / test cases within the list above. Each list entry is executed as a separate
+                        call to your test executable. The result of each test run is displayed within log pane.<br />
+                    </li>
+                    <li>
+                        <strong>Src</strong><br>
+                        opens the corresponding source file and jumps to the selected BOOST test case.
+                        For Boost test suites within the left list the first BOOST test case within the suite will be presented.<br />
+                    </li>
+                </ul>
+
+                <h3>Lower part: Log pane</h3>
+                Log pane containing important status messages. The test execution itself is displayed within the regular output pane of Visual Studio.
+
+                <ul>
+                    <li>
+                        <strong>Checkbox "Shutdown"</strong><br>
+                        When activated the termination of the selected tests will cause a saving of the log pane to a protocol file and a subsequent
+                        shutdown of your computer. The log file will be stored within the target directory of your startup application or (if there is no
+                        startup project selected) within the first temporary directory as found within environment variables TMP, TEMP or USERPROFILE.
+                    </li>
+                    <li>
+                        <strong>Clear log</strong><br>
+                        Clear entries within log pane
+                    </li>
+                    <li>
+                        <strong>Copy</strong><br>
+                        Copy list contents to paste buffer for later insertion as regular multiline text.
+                    </li>
+                    <li>
+                        <strong>Export</strong><br>
+                        Export the list contents to a text file.
+                    </li>
+                </ul>
+
+                <h3>Settings</h3>
+
+                You can adjust TestExecWindow to your needs. More options for individual configuration are available via the button "..." in the upper right corner.
+                Selecting it leads to a display of the following options:
+
+                <p><img src="Resources/MoreOptions.png" alt="MoreOptions" /></p>
+
+                <ul>
+                    <li>
+                        <strong>Default args</strong><br />
+                        define default args, which are used in addition to the args used for
+                        selecting a test suite or test case. This may be useful to activate some test behaviour
+                        common for all test suites or test cases.
+                    </li>
+                    <li>
+                        <strong>List "only test groups"</strong><br />
+                        decide whether to see both test suites and contained test cases
+                        or restrict visibility to one of them
+                    </li>
+                    <li>
+                        <strong>List "sort as read"</strong><br />
+                        choose an appropriate sort order
+                    </li>
+                    <li>
+                        <strong>List "hide log"</strong><br />
+                        hide the log pane if not needed
+                    </li>
+                    <li>
+                        <strong>List "wait for test app max 10 min"</strong><br />
+                        wait indefinitely for termination of a test or set one of several predefined time intervals
+                    </li>
+                    <li>
+                        <strong>List "leak check"</strong><br />
+                        activate or deactivate checking for memory leaks. The leak check assumes that your test app will use elementary
+                        memory leak detection facilities of C runtime ("_CrtSetDbgFlag(.._CRTDBG_LEAK_CHECK_DF)"). In case of leaks the C runtime will
+                        write corresponding messages to stdout/stderr ("Detected memory leaks...").
+                        TestExecWin will simply check test output from Visual Studio pane to decide whether leaks are existing or not.
+                        In combination with a separate run of each testcase you may identify the evil test cases.
+                    </li>
+                    <li>
+                        <strong>List "regular output"</strong><br />
+                        rise output level within log pane (may be useful when looking for problems)
+                    </li>
+                </ul>
+
+                <p>
+                    When the changed options from above are hidden again the configured window contains only BOOST test suites
+                    and will look like:
+                </p>
+                <p><img src="Resources/OnlyBoostTestSuites.png" alt="OnlyBoostTestSuites" /></p>
+
+                <h2>Batch file support</h2>
+                To control multiple executions of arbitrary test applications (e.g. the same test app with different start arguments or all/some test apps
+                from your test solution) use batch file feature on tab "Test Apps".
+                A detailed description to use this feature can be found
+                <a href="https://www.gerald-fahrnholz.eu/sw/online_doc_testexecwin/generated/group___grp_user_interface_batch.html"> here</a>.
+
+                <h2>Not fulfilling all your needs?</h2>
+                This extension is free software (GNU GENERAL PUBLIC LICENSE Version 3).<br />
+                Sources are available for extension, modification and correction (see
+                <a href="https://www.gerald-fahrnholz.eu/sw/online_doc_testexecwin/generated/group___grp_installation.html"> Extended documentation</a>)
+
+            </div>
+        </div>
+    </div>
+</body>
+</html>

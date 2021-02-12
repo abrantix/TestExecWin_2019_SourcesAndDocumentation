@@ -1,0 +1,35 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML><HEAD></HEAD><BODY>
+<OBJECT type="text/site properties">
+<param name="FrameName" value="right">
+</OBJECT>
+<UL>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="group___grp_user_interface_batch.html"><param name="Name" value="Batch file support"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="group___grp_executor.html"><param name="Name" value="Class Executor - process execution and redirection of output"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="group___grp_parser.html"><param name="Name" value="Class SourceFileParser - look for test macros within files of project dir"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="group___grp_package.html"><param name="Name" value="Class TestExecWindowPackage - Visual Studio integration, enabling DTE access"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="group___grp_visual_studio_connector.html"><param name="Name" value="Class VisualStudioConnector - Visual Studio: data access via DTE, notifications, automation commands"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="group___grp_common_functionality.html"><param name="Name" value="Common functionality for an extension project - Online help, manifest, icons"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="group___grp_visual_studio_extension.html"><param name="Name" value="Creating a Visual Studio Extension"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="group___grp_multi_threading.html"><param name="Name" value="Do not forget to deal with multi threading"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="group___grp_installation.html"><param name="Name" value="Download and Installation"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="group___grp_source_executor.html"><param name="Name" value="Executor.cs"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="group___grp_extended_settings.html"><param name="Name" value="Extended settings - defaults args and configuration of layout"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="group___grp_hidden_pages.html"><param name="Name" value="Hidden page files of documentation"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="group___grp_design.html"><param name="Name" value="Internal Design"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="group___grp_open_test_exec_window.html"><param name="Name" value="Open TestExecWindow"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="group___grp_parsing_soure_files.html"><param name="Name" value="Parsing of source files - current limitations"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="group___grp_sources.html"><param name="Name" value="Source files"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="group___grp_source_source_file_parser.html"><param name="Name" value="SourceFileParser.cs"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="group___grp_test_exec_window.html"><param name="Name" value="TestExecWindow.cs"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="group___grp_test_exec_window_command.html"><param name="Name" value="TestExecWindowCommand.cs"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="group___grp_test_exec_window_control_xaml.html"><param name="Name" value="TestExecWindowControl.xaml"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="group___grp_test_exec_window_control_xaml_cs.html"><param name="Name" value="TestExecWindowControl.xaml.cs"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="group___grp_test_exec_window_package.html"><param name="Name" value="TestExecWindowPackage.cs"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="group___grp_typical_test_activities.html"><param name="Name" value="Typical test activities"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="group___grp_user_guide.html"><param name="Name" value="User guide"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="group___grp_user_interface.html"><param name="Name" value="User interface - description of control elements"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="group___grp_source_visual_studio_connector.html"><param name="Name" value="VisualStudioConnector.cs"></OBJECT>
+</UL>
+</BODY>
+</HTML>

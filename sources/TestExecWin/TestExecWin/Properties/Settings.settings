@@ -1,0 +1,150 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="TestExecWin.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="GeneralCmdLineArgs" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="TestApps1" Type="System.String" Scope="User">
+      <Value Profile="(Default)">// App set 1 of 8. Enter each test app on a single line
+// Empty lines and lines starting with "//" are ignored
+
+C:\YourTargetDir\Debug\YourTestAppOne.exe -optionalArgs
+C:\YourTargetDir\Debug\YourNextTestAppTwo.exe
+
+// To automatically generate entries here check import
+// possibilities via button "Export/Import"</Value>
+    </Setting>
+    <Setting Name="TestApps2" Type="System.String" Scope="User">
+      <Value Profile="(Default)">// App set 2 of 8. Enter each test app on a single line
+// Empty lines and lines starting with "//" are ignored
+
+C:\YourTargetDir\Debug\YourTestAppOne.exe -optionalArgs
+C:\YourTargetDir\Debug\YourNextTestAppTwo.exe
+
+// To automatically generate entries here check import
+// possibilities via button "Export/Import"
+
+</Value>
+    </Setting>
+    <Setting Name="TestApps3" Type="System.String" Scope="User">
+      <Value Profile="(Default)">// App set 3 of 8. Enter each test app on a single line
+// Empty lines and lines starting with "//" are ignored
+
+C:\YourTargetDir\Debug\YourTestAppOne.exe -optionalArgs
+C:\YourTargetDir\Debug\YourNextTestAppTwo.exe
+
+// To automatically generate entries here check import
+// possibilities via button "Export/Import"
+
+</Value>
+    </Setting>
+    <Setting Name="DescTestApps1" Type="System.String" Scope="User">
+      <Value Profile="(Default)">1. Set of test apps (rename this)</Value>
+    </Setting>
+    <Setting Name="DescTestApps2" Type="System.String" Scope="User">
+      <Value Profile="(Default)">2. Set of test apps (rename this)</Value>
+    </Setting>
+    <Setting Name="DescTestApps3" Type="System.String" Scope="User">
+      <Value Profile="(Default)">3. Set of test apps (rename this)</Value>
+    </Setting>
+    <Setting Name="CheckForMemoryLeaks" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="IdxGroupsAndFuncs" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="IdxSortOrder" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="LogIsVisible" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="IdxOutputLevel" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="IdxCurrentTestApps" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="OptionsAreVisible" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="TestApps4" Type="System.String" Scope="User">
+      <Value Profile="(Default)">// App set 4 of 8. Enter each test app on a single line
+// Empty lines and lines starting with "//" are ignored
+
+C:\YourTargetDir\Debug\YourTestAppOne.exe -optionalArgs
+C:\YourTargetDir\Debug\YourNextTestAppTwo.exe
+
+// To automatically generate entries here check import
+// possibilities via button "Export/Import"
+
+</Value>
+    </Setting>
+    <Setting Name="TestApps5" Type="System.String" Scope="User">
+      <Value Profile="(Default)">// App set 5 of 8. Enter each test app on a single line
+// Empty lines and lines starting with "//" are ignored
+
+C:\YourTargetDir\Debug\YourTestAppOne.exe -optionalArgs
+C:\YourTargetDir\Debug\YourNextTestAppTwo.exe
+
+// To automatically generate entries here check import
+// possibilities via button "Export/Import"
+</Value>
+    </Setting>
+    <Setting Name="DescTestApps4" Type="System.String" Scope="User">
+      <Value Profile="(Default)">4. Set of test apps (rename this)</Value>
+    </Setting>
+    <Setting Name="DescTestApps5" Type="System.String" Scope="User">
+      <Value Profile="(Default)">5. Set of test apps (rename this)</Value>
+    </Setting>
+    <Setting Name="IdxMaxWaitTime" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="TestApps6" Type="System.String" Scope="User">
+      <Value Profile="(Default)">// App set 6 of 8. Enter each test app on a single line
+// Empty lines and lines starting with "//" are ignored
+
+C:\YourTargetDir\Debug\YourTestAppOne.exe -optionalArgs
+C:\YourTargetDir\Debug\YourNextTestAppTwo.exe
+
+// To automatically generate entries here check import
+// possibilities via button "Export/Import"
+
+</Value>
+    </Setting>
+    <Setting Name="TestApps7" Type="System.String" Scope="User">
+      <Value Profile="(Default)">// App set 7 of 8. Enter each test app on a single line
+// Empty lines and lines starting with "//" are ignored
+
+C:\YourTargetDir\Debug\YourTestAppOne.exe -optionalArgs
+C:\YourTargetDir\Debug\YourNextTestAppTwo.exe
+
+// To automatically generate entries here check import
+// possibilities via button "Export/Import"
+
+</Value>
+    </Setting>
+    <Setting Name="TestApps8" Type="System.String" Scope="User">
+      <Value Profile="(Default)">// App set 8 of 8. Enter each test app on a single line
+// Empty lines and lines starting with "//" are ignored
+
+C:\YourTargetDir\Debug\YourTestAppOne.exe -optionalArgs
+C:\YourTargetDir\Debug\YourNextTestAppTwo.exe
+
+// To automatically generate entries here check import
+// possibilities via button "Export/Import"
+
+</Value>
+    </Setting>
+    <Setting Name="DescTestApps6" Type="System.String" Scope="User">
+      <Value Profile="(Default)">6. Set of test apps (rename this)</Value>
+    </Setting>
+    <Setting Name="DescTestApps7" Type="System.String" Scope="User">
+      <Value Profile="(Default)">7. Set of test apps (rename this)</Value>
+    </Setting>
+    <Setting Name="DescTestApps8" Type="System.String" Scope="User">
+      <Value Profile="(Default)">8. Set of test apps (rename this)</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
