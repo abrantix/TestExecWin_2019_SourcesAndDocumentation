@@ -1,3 +1,3 @@
 ﻿CREDITS
 
-Ok.png and Error.png are work of https://www.deviantart.com/hopstarter
+Ok.png, Error.png, Cancel.png and Help.png are work of https://www.deviantart.com/hopstarter

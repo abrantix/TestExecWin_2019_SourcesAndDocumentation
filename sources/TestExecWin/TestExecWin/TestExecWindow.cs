@@ -37,6 +37,12 @@ namespace TestExecWin
         void OnStartDebugging(string in_cmdLineParams);
         void OnOpenProtocolFile();
         void OnOpenSourceFile(string in_fullFileName, int in_lineNum);
+        void OnTestSuiteStart(string name);
+        void OnTestSuiteEnd(string name);
+        void OnTestSuiteSkipped(string name, string info);
+        void OnTestCaseStart(string suite, string name);
+        void OnTestCaseEnd(string suite, string name, bool failed, string info);
+        void OnTestCaseSkipped(string suite, string name);
         string OnGetExecutablesFromCurrentSolution();
     }
 
@@ -72,7 +78,7 @@ namespace TestExecWin
         public string GetCmdString()
         {
             string cmdString = GetTestGroupHierarchyString();
-            return "--run_test=" + cmdString;
+            return " --run_test=" + cmdString;
         }
 
         public override string ToString()
@@ -126,7 +132,7 @@ namespace TestExecWin
             {
                 string cmdString = TestGroup.GetTestGroupHierarchyString();
                 cmdString += TestFunction;
-                return "--run_test=" + cmdString;
+                return " --run_test=" + cmdString;
             }
             else // TTB
             {
@@ -392,6 +398,36 @@ namespace TestExecWin
         public void MsgBox(string in_info)
         {
             System.Windows.MessageBox.Show(in_info, "Info");
+        }
+
+        void IMainEvents.OnTestSuiteStart(string name)
+        {
+            
+        }
+
+        void IMainEvents.OnTestSuiteEnd(string name)
+        {
+            //TODO: where to get test result?
+            Gui().SetTestSuiteResult(name, Result.Success, string.Empty);
+        }
+
+        void IMainEvents.OnTestSuiteSkipped(string name, string info)
+        {
+            Gui().SetTestSuiteResult(name, Result.Disabled, info);
+        }
+
+        void IMainEvents.OnTestCaseStart(string suite, string name)
+        {
+        }
+
+        void IMainEvents.OnTestCaseEnd(string suite, string name, bool failed, string info)
+        {
+            Gui().SetTestCaseResult(suite, name, failed ? Result.Failed : Result.Success, info);
+        }
+
+        void IMainEvents.OnTestCaseSkipped(string suite, string name)
+        {
+            Gui().SetTestCaseResult(suite, name, Result.Disabled, "Test case disabled");
         }
     }
 }

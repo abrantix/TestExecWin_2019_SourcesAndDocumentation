@@ -93,6 +93,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>-->
   <ItemGroup>
+    <Compile Include="BoostProcessOutputParser.cs" />
     <Compile Include="Executor.cs" />
     <Compile Include="NodeList.cs" />
     <Compile Include="Node.cs" />
@@ -138,6 +139,12 @@
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Resource Include="Resources\Error.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Cancel.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Help.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
     <Content Include="Resources\Instruction.png">

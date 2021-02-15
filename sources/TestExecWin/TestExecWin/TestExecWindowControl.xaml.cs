@@ -73,7 +73,7 @@ namespace TestExecWin
 
         private TestFunctionTreeViewItem[] TestFunctionsToExecute;
         private TestTreeViewItem[] TestGroupsToExecute;
-        TestTreeViewItem rootTestTreeViewItem = new TestTreeViewItem(null);
+        TestTreeViewItem rootTestTreeViewItem = new TestTreeViewItem(null, new TestGroupEntry(true, string.Empty));
 
         private static RoutedUICommand m_showSourceCommand = new RoutedUICommand("Show Shource", "ShowSource", typeof(TestExecWindowControl));
         private static RoutedUICommand m_debugCommand = new RoutedUICommand("Debug", "Debug", typeof(TestExecWindowControl));
@@ -414,7 +414,9 @@ namespace TestExecWin
 
                     if (rootTestTreeViewItem.TreeViewItems.Count > 0)
                     {
-                        TestGroupsToExecute = rootTestTreeViewItem.TreeViewItems.First().GetMainTestGroups();
+                        Application.Current.Dispatcher.Invoke(new Action(() => { StartAllTests(); }));
+                        
+                        /*TestGroupsToExecute = rootTestTreeViewItem.TreeViewItems.First().GetMainTestGroups();
                         //clear test results
                         TestGroupsToExecute.ToList().ForEach(x =>
                             {
@@ -427,7 +429,7 @@ namespace TestExecWin
                             InitForTestExecution(RunMode.TEST_GROUPS, TestGroupsToExecute.Length);
                             m_idxRunAllTestGroups = 0;
                             StartTestGroup(0);
-                        }
+                        }*/
                     }
                 }
             }
@@ -673,6 +675,17 @@ namespace TestExecWin
                 TestFunctionsToExecute[m_idxRunAllTestFuncs].TestResult.ProcessOutput = processOutput;
                 TestFunctionsToExecute[m_idxRunAllTestFuncs].TreeViewParent.ReflectTestResultsFromChilds();
             }
+            else
+            {
+                //Run all
+                rootTestTreeViewItem.TreeViewItems.First().TestResult = testResult;
+                rootTestTreeViewItem.TreeViewItems.First().TestResult.ProcessOutput = processOutput;
+                //We only get overall success/failed on group execution - only set "Success" - failed leads to "tentiative" result of all childs
+                if (testResult.Result == Result.Success)
+                {
+                    rootTestTreeViewItem.TreeViewItems.First().PropagateTestResultToAllChilds();
+                }
+            }
 
             bool testSucceededUpToNow = (m_numFailedTests[idx] == 0);
             // Safe update of state variables and refresh
@@ -729,6 +742,13 @@ namespace TestExecWin
                 }
 
             }
+        }
+
+        private void StartAllTests()
+        {
+            m_state[(int)m_curRunMode] = State.RUNNING;
+            RefreshState();
+            StartProcess(m_projectInfo.GetExePath(), cbxDefaultArgs.Text, m_projectInfo.SelectedProject.TargetDirPath);
         }
 
         private void StartTestGroup(int in_idx)
@@ -1042,6 +1062,35 @@ namespace TestExecWin
             //lstEvents.SelectedIndex = -1;
         }
 
+        internal void SetTestSuiteResult(string suitePath, Result result, string info)
+        {
+            var item = rootTestTreeViewItem.TreeViewItems.First().GetOverallTestGroups().FirstOrDefault(x => x.TestGroupEntry.GetTestGroupHierarchyString().Trim('/') == suitePath.Trim('/'));
+            if (item != null)
+            {
+                //Todo: add result of TestResult info
+                item.TestResult.Result = result;
+                item.TestResult.ProcessOutput = info;
+            }
+            else
+            {
+                WriteLine(1, $"ERROR: No test group found with suite '{suitePath}'");
+            }
+        }
+
+        internal void SetTestCaseResult(string suitePath, string name, Result result, string info)
+        {
+            var item = rootTestTreeViewItem.TreeViewItems.First().GetOverallTestFunctions().FirstOrDefault(x => x.TestFuncEntry.TestGroup.GetTestGroupHierarchyString().Trim('/') == suitePath.Trim('/') && x.TestFuncEntry.TestFunction == name);
+            if (item != null)
+            {
+                item.TestResult.Result = result;
+                item.TestResult.ProcessOutput = info ?? string.Empty;
+            }
+            else
+            {
+                WriteLine(1, $"ERROR: No test case found with suite '{suitePath}' and name '{name}'");
+            }
+        }
+
         internal void SetTestInfo(ProjectInfo in_projectInfo)
         {
             m_projectInfo = in_projectInfo;
@@ -1119,7 +1168,7 @@ namespace TestExecWin
 
         private void AddTestGroupEntryToTreeView(NodeList<TestGroupEntry> testGroupEntryNode, TestTreeViewItem parentTreeView)
         {
-            TestTreeViewItem treeViewItem = new TestTreeViewItem(parentTreeView) { DisplayName = testGroupEntryNode.Value.Name == string.Empty ? "<default>" : testGroupEntryNode.Value.Name };
+            TestTreeViewItem treeViewItem = new TestTreeViewItem(parentTreeView, testGroupEntryNode.Value) { DisplayName = testGroupEntryNode.Value.Name == string.Empty ? "<default>" : testGroupEntryNode.Value.Name };
 
             //add test functions
             foreach (var testFunc in testGroupEntryNode.Value.testFuncs)
@@ -1163,7 +1212,7 @@ namespace TestExecWin
                 }
 
                 testTreeView.Items.Clear();
-                rootTestTreeViewItem = new TestTreeViewItem(null) { DisplayName = "dummyRoot" };
+                rootTestTreeViewItem = new TestTreeViewItem(null, new TestGroupEntry(true, string.Empty)) { DisplayName = "dummyRoot" };
                 AddTestGroupEntryToTreeView(m_projectInfo.SelectedProject.TestGroups, rootTestTreeViewItem);
                 rootTestTreeViewItem.TreeViewItems.First().OverallSortAllChilds(sortOrder);
                 testTreeView.Items.Add(rootTestTreeViewItem.TreeViewItems.First());

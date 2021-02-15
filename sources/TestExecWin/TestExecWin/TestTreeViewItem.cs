@@ -9,15 +9,17 @@ namespace TestExecWin
 {
 	public class TestTreeViewItem : TreeViewItemBase
 	{
-		public TestTreeViewItem(TreeViewItemBase parent)
+		public TestGroupEntry TestGroupEntry { get; set; }
+		public TestTreeViewItem(TreeViewItemBase parent, TestGroupEntry testGroupEntry)
 			: base(parent)
 		{
+			this.TestGroupEntry = testGroupEntry;
 		}
 
 		public string GetCmdString()
 		{
 			string cmdString = DisplayName;
-			return "--run_test=" + cmdString;
+			return " --run_test=" + cmdString;
 		}
 	}
 }
