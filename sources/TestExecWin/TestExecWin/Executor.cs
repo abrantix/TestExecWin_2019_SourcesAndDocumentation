@@ -35,7 +35,7 @@ namespace TestExecWin
         /// [exec data]
         // Control data used for executing an external process
         private System.Diagnostics.Process m_process = null;
-        private StringBuilder m_processOutputStringBuilder;
+        private readonly BoostProcessOutputParser boostProcessOutputParser = new BoostProcessOutputParser();
 
         // Output window pane within Visual Studio to be
         // used as stdout for test executable
@@ -59,6 +59,42 @@ namespace TestExecWin
         {
             m_mainEvents = in_mainEvents;
             m_evenReceiver = in_eventReceiver;
+            boostProcessOutputParser.OnTestSuiteEntered += BoostProcessOutputParser_OnTestSuiteEntered;
+            boostProcessOutputParser.OnTestSuiteLeft += BoostProcessOutputParser_OnTestSuiteLeft;
+            boostProcessOutputParser.OnTestSuiteSkipped += BoostProcessOutputParser_OnTestSuiteSkipped;
+            boostProcessOutputParser.OnTestCaseEntered += BoostProcessOutputParser_OnTestCaseEntered;
+            boostProcessOutputParser.OnTestCaseLeft += BoostProcessOutputParser_OnTestCaseLeft;
+            boostProcessOutputParser.OnTestCaseSkipped += BoostProcessOutputParser_OnTestCaseSkipped;
+        }
+
+        private void BoostProcessOutputParser_OnTestCaseSkipped(object sender, BoostProcessOutputParser.TestModuleEventArgs e)
+        {
+            m_mainEvents.OnTestCaseSkipped(e.TestSuite, e.TestCase);
+        }
+
+        private void BoostProcessOutputParser_OnTestSuiteSkipped(object sender, BoostProcessOutputParser.TestModuleEventArgs e)
+        {
+            m_mainEvents.OnTestSuiteSkipped(e.TestSuite, e.TestInfo);
+        }
+
+        private void BoostProcessOutputParser_OnTestCaseLeft(object sender, BoostProcessOutputParser.TestModuleEventArgs e)
+        {
+            m_mainEvents.OnTestCaseEnd(e.TestSuite, e.TestCase, e.TestExecInfoType == BoostProcessOutputParser.TestExecInfoType.Error, e.TestInfo);
+        }
+
+        private void BoostProcessOutputParser_OnTestCaseEntered(object sender, BoostProcessOutputParser.TestModuleEventArgs e)
+        {
+            m_mainEvents.OnTestCaseStart(e.TestSuite, e.TestCase);
+        }
+
+        private void BoostProcessOutputParser_OnTestSuiteLeft(object sender, BoostProcessOutputParser.TestModuleEventArgs e)
+        {
+            m_mainEvents.OnTestSuiteEnd(e.TestSuite);
+        }
+
+        private void BoostProcessOutputParser_OnTestSuiteEntered(object sender, BoostProcessOutputParser.TestModuleEventArgs e)
+        {
+            m_mainEvents.OnTestSuiteStart(e.TestSuite);
         }
 
         public void SetMemLeakCheck(bool in_state)
@@ -67,7 +103,7 @@ namespace TestExecWin
         }
 
         /// [exec start process]
-        public void StartProcess(string exePath, string args, string workDir)
+        public void StartProcess(string exePath, string args, string workDir, bool enableBoostParsing)
         {
             try
             {
@@ -93,7 +129,8 @@ namespace TestExecWin
                 m_process.StartInfo.FileName = exePath;
                 m_process.StartInfo.WorkingDirectory = workDir;
                 m_process.StartInfo.Arguments = args.Trim();
-                m_processOutputStringBuilder = new StringBuilder();
+                boostProcessOutputParser.Clear();
+                boostProcessOutputParser.EnableParsing = enableBoostParsing;
 
                 if (m_getNotificationWhenProcessTerminates)
                 {
@@ -111,9 +148,9 @@ namespace TestExecWin
                     m_process.StartInfo.RedirectStandardError = true;
                     m_process.StartInfo.CreateNoWindow = true;
                     m_process.OutputDataReceived +=  new System.Diagnostics.
-                        DataReceivedEventHandler(StandardOutputReceiver);
+                        DataReceivedEventHandler(boostProcessOutputParser.StandardOutputReceiver);
                     m_process.ErrorDataReceived += new System.Diagnostics.
-                        DataReceivedEventHandler(StandardErrorReceiver);
+                        DataReceivedEventHandler(boostProcessOutputParser.StandardErrorReceiver);
                 }
 
                 // -----  Start the new process and start redirection of output  -----
@@ -145,30 +182,25 @@ namespace TestExecWin
                 TimeSpan executionTime = m_process.ExitTime - m_process.StartTime;
                 WriteLine(2, info);
                 bool memLeaksDetected = false;
+                
                 if (m_checkForMemoryLeaks)
                 {
                     WriteLine(3, "Process_Exited: Checking mem leaks...");
 
-                    //System.Threading.Thread.Sleep(500); // wait needed for completion of output?
-                    WriteLine(3, "Process_Exited: .. after sleep");
-                    var sel = m_processOutputStringBuilder.ToString();
+                    var errors = boostProcessOutputParser.ErrorOutputStringBuilder.ToString();
+
                     WriteLine(3, "Process_Exited: selection acquired");
-                    //sel.SelectAll();
-                    WriteLine(3, "Process_Exited: all selected");
-                    //sel.StartOfDocument(false);
-                    //sel.EndOfDocument(true);
-                    //System.IO.File.WriteAllText("C:\\MyTemp\\OutputPane.txt", sel.Text);
 
                     // In case of many memory leaks the output containing "Detected memory leaks" may
                     // no longer be within limited buffer of output pane. Therefore check also for
                     // final message "Object dump complete".
-                    if ((sel.Contains("Detected memory leaks")) || (sel.Contains("Object dump complete")))
+                    if ((errors.Contains("Detected memory leaks")) || (errors.Contains("Object dump complete")))
                     {
                         memLeaksDetected = true;
                         WriteLine(3, "Process_Exited: ERROR: Memory leaks detected!");
                     }
                 }
-                m_mainEvents.OnTestTerminated(m_process.ExitCode == 0 ? Result.Success : Result.Failed, m_process.StartInfo.Arguments, memLeaksDetected, executionTime, m_processOutputStringBuilder.ToString());
+                m_mainEvents.OnTestTerminated(m_process.ExitCode == 0 ? Result.Success : Result.Failed, m_process.StartInfo.Arguments, memLeaksDetected, executionTime, boostProcessOutputParser.StandardOutputStringBuilder.ToString());
             }
             catch (Exception ex)
             {
@@ -194,32 +226,6 @@ namespace TestExecWin
             {
                 string info = "EXCEPTION: " + e.ToString();
                 WriteLine(2, info);
-            }
-        }
-
-        /// [exec redirect stdout]
-        private void StandardOutputReceiver(object sendingProcess,
-            System.Diagnostics.DataReceivedEventArgs outLine)
-        {
-            // Receives the child process' standard output
-            if (!string.IsNullOrEmpty(outLine.Data))
-            {
-                m_processOutputStringBuilder.AppendLine(outLine.Data);
-                /*if (m_outputPane != null)
-                    m_outputPane.OutputString(outLine.Data + System.Environment.NewLine);*/
-            }
-        }
-        /// [exec redirect stdout]
-
-        private void StandardErrorReceiver(object sendingProcess,
-            System.Diagnostics.DataReceivedEventArgs errLine)
-        {
-            // Receives the child process' standard error
-            if (!string.IsNullOrEmpty(errLine.Data))
-            {
-                m_processOutputStringBuilder.AppendFormat("Error> {0}\n", errLine.Data);
-                /*if (m_outputPane != null)
-                    m_outputPane.OutputString("Error> " + errLine.Data + System.Environment.NewLine);*/
             }
         }
 

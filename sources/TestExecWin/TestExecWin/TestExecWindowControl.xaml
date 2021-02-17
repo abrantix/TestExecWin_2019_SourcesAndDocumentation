@@ -31,7 +31,6 @@
             </Grid.ColumnDefinitions>
             <TextBlock x:Name="txtInfo" Grid.Column="0" HorizontalAlignment="Left" Padding="2,6,2,2" Text="Startup project not set" RenderTransformOrigin="0.492,0.593" />
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.ColumnSpan="2" >
-                <CheckBox  x:Name="chkUseDebugger" Visibility="Hidden" Margin="4,7,4,-5" Content="Debug"  Checked="chkUseDebugger_CheckBoxChanged" Unchecked="chkUseDebugger_CheckBoxChanged" VerticalAlignment="Top" Height="23" />
                 <Button x:Name="btnOpenProtocolFile" Margin="4,0,2,2" Content="Out"  Visibility="Hidden" Height="21" VerticalAlignment="Bottom" Click="btnOpenProtocolFile_Click" />
                 <Button x:Name="btnRefreshAll" Margin="4,2,2,2" Content="Refresh" Click="btnRefreshAll_Click"/>
                 <Button x:Name="btnMoreOptions" Margin="4,2,2,2" Content="..." Click="btnMoreOptions_Click" />
@@ -66,9 +65,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <TabControl x:Name="tabControl" Grid.Row="0" Grid.Column="0" MinWidth="60" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" >
-                <TabItem Header="Startup project" VerticalAlignment="Bottom">
-                    <Grid >
+                    <Grid  Grid.Row="0" Grid.Column="0" MinWidth="60">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="25" />
                             <RowDefinition Height="5*" x:Name="mainRowLogNew" />
@@ -128,7 +125,6 @@
                         <ScrollViewer Grid.Row="1" Grid.Column="1" Margin="4" HorizontalScrollBarVisibility="Auto">
                             <TextBox x:Name="txtResultInfo" IsReadOnly="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="Auto" >txtResultInfo</TextBox>
                         </ScrollViewer>
-                        <TextBlock x:Name="txtInfoStarArgTestGroup" Padding="2" Margin="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="2" Grid.Column="0">Select test file / test suite or edit cmdparam below:</TextBlock>
                         <Grid Grid.Row="4" Grid.Column="0"  Margin="4,2,5,2">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="0.45*"/>
@@ -138,63 +134,15 @@
                         </Grid>
                         <Grid Grid.Row="4" Grid.Column="0"  Margin="4,2,4,2">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="0.45*"/>
-                                <ColumnDefinition Width="0.35*"/>
+                                <ColumnDefinition Width="0.40*"/>
+                                <ColumnDefinition Width="0.30*"/>
                                 <ColumnDefinition Width="0.20*"/>
                             </Grid.ColumnDefinitions>
                             <Button x:Name="btnRunSelectedTestFunc" Content="Run selected" Margin="0,2,2,2" Grid.Row="0" Grid.Column="0" Click="btnRunSelectedTestFunc_Click" />
                             <Button x:Name="btnRunAllTestFuncs" Content="Run all" Margin="2,2,2,2" Grid.Row="0" Grid.Column="1" Click="btnRunAllTestFuncs_Click" />
-                        </Grid>
+                            <Button x:Name="btnDebugAllTestFuncs" Content="Debug all" Margin="2,2,2,2" Grid.Row="0" Grid.Column="2" Click="btnDebugAllTestFuncs_Click" />
+                </Grid>
                     </Grid>
-                </TabItem>
-                <TabItem Header="Test Apps" >
-                    <Grid >
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="30"/>
-                            <RowDefinition Height="1*" />
-                            <RowDefinition Height="30"/>
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="14*"/>
-                            <ColumnDefinition Width="59*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid Grid.Row="0" Grid.Column="0"  Margin="0,2,0,0" Grid.ColumnSpan="2">
-                                <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <ComboBox x:Name="cbxDescTestApps" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Stretch" SelectionChanged="cbxDescTestApps_SelectionChanged" />
-                            <TextBlock x:Name="txtInfoTestApps" Grid.Row="0" Grid.Column="1" Margin="4,4" HorizontalAlignment="Left" VerticalAlignment="Center" Grid.ColumnSpan="2" >--</TextBlock>
-                        </Grid>
-                        <TextBox x:Name="txtTestApps" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch" TextWrapping="NoWrap" Text="[enter full path of your test apps - each on a separate line]" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Grid.ColumnSpan="2" />
-                        <Grid Grid.Row="2" Grid.Column="0"  Margin="4,2,4,2" Grid.ColumnSpan="2">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="0.4*"/>
-                                <ColumnDefinition Width="0.4*"/>
-                                <ColumnDefinition Width="0.4*"/>
-                                <ColumnDefinition Width="0.4*"/>
-                                <ColumnDefinition Width="0.5*"/>
-                            </Grid.ColumnDefinitions>
-                            <Button x:Name="btnSaveTestApps"   Grid.Row="0" Grid.Column="1" Margin="2,2,2,2" Content="Save" Click="btnSaveTestApps_Click"/>
-                            <Button x:Name="btnReloadTestApps"  Grid.Row="0" Grid.Column="2" Margin="2,2,2,2" Content="Reload" Click="btnReloadTestApps_Click"/>
-                            <Button x:Name="btnClearTestApps"  Grid.Row="0" Grid.Column="3" Margin="2,2,2,2" Content="Clear" Click="btnClearTestApps_Click"/>
-                            <ComboBox x:Name="cbxExportImportTestApps" Grid.Row="0" Grid.Column="4" Margin="2,2,0,2" SelectionChanged="cbxExportImportTestApps_SelectionChangeCommitted" SelectedIndex="0">
-                                <ComboBoxItem Visibility="Collapsed">Export/Import</ComboBoxItem>
-                                <ComboBoxItem>Export to file...</ComboBoxItem>
-                                <ComboBoxItem>Import from file...</ComboBoxItem>
-                                <ComboBoxItem>Import from solution</ComboBoxItem>
-                                <ComboBoxItem>Import test suites from startup project</ComboBoxItem>
-                                <ComboBoxItem>Import visible test cases from startup project</ComboBoxItem>
-                            </ComboBox>
-
-                        </Grid>
-                    </Grid>
-                </TabItem>
-                <TextBlock x:Name="textBlock" Height="100" TextWrapping="Wrap" Text="TextBlock" Width="100"/>
-            </TabControl>
         </Grid>
 
         <ListBox x:Name="lstEvents" Grid.Row="4" Grid.ColumnSpan="2" Margin="4" VerticalAlignment="Stretch"/>
@@ -205,7 +153,6 @@
                 <ColumnDefinition Width="0.4*"/>
                 <ColumnDefinition Width="0.5*"/>
             </Grid.ColumnDefinitions>
-            <CheckBox  x:Name="chkShutdown" Grid.Row="0" Grid.Column="0" MinWidth="60" Margin="0,0,0,-3" Content="Shutdown"  Checked="chkShutdown_CheckBoxChanged" Unchecked="chkShutdown_CheckBoxChanged" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Height="23" />
             <Button x:Name="btnClearEvents" Grid.Row="0" Grid.Column="1" MinWidth="60" Margin="2,2,4,2" Content="Clear log" Click="btnClearEvents_Click"/>
             <Button x:Name="btnCopyLog" Grid.Row="0" Grid.Column="2" MinWidth="60" Margin="2,2,4,2" Content="Copy" Click="btnCopyLog_Click"/>
             <Button x:Name="btnExportLog" Grid.Row="0" Grid.Column="3" MinWidth="60" Margin="2,2,4,2" Content="Export..." Click="btnExportLog_Click"/>

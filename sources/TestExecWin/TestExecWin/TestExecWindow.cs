@@ -20,6 +20,7 @@
 namespace TestExecWin
 {
     using System;
+    using System.IO;
     using System.Linq;
     using System.Runtime.InteropServices;
     using Microsoft.VisualStudio;
@@ -37,13 +38,19 @@ namespace TestExecWin
         void OnStartDebugging(string in_cmdLineParams);
         void OnOpenProtocolFile();
         void OnOpenSourceFile(string in_fullFileName, int in_lineNum);
+        void OnTestSuiteStart(string name);
+        void OnTestSuiteEnd(string name);
+        void OnTestSuiteSkipped(string name, string info);
+        void OnTestCaseStart(string suite, string name);
+        void OnTestCaseEnd(string suite, string name, bool failed, string info);
+        void OnTestCaseSkipped(string suite, string name);
         string OnGetExecutablesFromCurrentSolution();
     }
 
     public interface IExecute
     {
         void SetMemLeakCheck(bool in_state);
-        void StartProcess(string exePath, string args, string workDir);
+        void StartProcess(string exePath, string args, string workDir, bool enableBoostParsing);
         void KillRunningProcess();
     }
 
@@ -72,7 +79,7 @@ namespace TestExecWin
         public string GetCmdString()
         {
             string cmdString = GetTestGroupHierarchyString();
-            return "--run_test=" + cmdString;
+            return " --run_test=" + cmdString;
         }
 
         public override string ToString()
@@ -82,7 +89,7 @@ namespace TestExecWin
 
         public string GetTestGroupHierarchyString()
         {
-            return NodeList.GetPath();
+            return NodeList.GetPath().Trim('/');
             /*string allTestGroups = "";
             foreach (string grp in testGroups)
             {
@@ -103,6 +110,7 @@ namespace TestExecWin
         public int LineNum { get; set; }
         public string TestFunction { get; set; }
         public bool IsTestDisabled { get; set; }
+        public bool IsDataTestCase { get; set; }
         public TestGroupEntry TestGroup { get; set; }
 
         public TestFuncEntry(bool in_isBoostFunc, TestGroupEntry testGroup, bool isTestDisabled)
@@ -124,9 +132,7 @@ namespace TestExecWin
         {
             if (IsBoostFunc)
             {
-                string cmdString = TestGroup.GetTestGroupHierarchyString();
-                cmdString += TestFunction;
-                return "--run_test=" + cmdString;
+                return $" --run_test={TestGroup.GetTestGroupHierarchyString()}/{TestFunction}";
             }
             else // TTB
             {
@@ -392,6 +398,36 @@ namespace TestExecWin
         public void MsgBox(string in_info)
         {
             System.Windows.MessageBox.Show(in_info, "Info");
+        }
+
+        void IMainEvents.OnTestSuiteStart(string name)
+        {
+            
+        }
+
+        void IMainEvents.OnTestSuiteEnd(string name)
+        {
+            //TODO: where to get test result?
+            Gui().SetTestSuiteResult(name, Result.Success, string.Empty, false);
+        }
+
+        void IMainEvents.OnTestSuiteSkipped(string name, string info)
+        {
+            Gui().SetTestSuiteResult(name, Result.Disabled, info, true);
+        }
+
+        void IMainEvents.OnTestCaseStart(string suite, string name)
+        {
+        }
+
+        void IMainEvents.OnTestCaseEnd(string suite, string name, bool failed, string info)
+        {
+            Gui().SetTestCaseResult(suite, name, failed ? Result.Failed : Result.Success, info);
+        }
+
+        void IMainEvents.OnTestCaseSkipped(string suite, string name)
+        {
+            Gui().SetTestCaseResult(suite, name, Result.Disabled, "Test case disabled");
         }
     }
 }

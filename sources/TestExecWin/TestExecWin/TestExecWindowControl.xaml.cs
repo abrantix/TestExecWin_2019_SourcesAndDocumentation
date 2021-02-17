@@ -58,10 +58,8 @@ namespace TestExecWin
         private IEventReceiver m_evenReceiver;
         private IExecute m_executor;
 
-        private bool m_useDebugger = false;
-
-        enum RunMode { TEST_GROUPS, TEST_FUNCS, TEST_APPS, TEST_STARTUP_PROJECT };
-        private RunMode m_curRunMode = RunMode.TEST_STARTUP_PROJECT;
+        enum RunMode { TEST_FUNCS, TEST_ALL };
+        private RunMode m_curRunMode = RunMode.TEST_ALL;
         private int[] m_numExecutedTests = new int[] { 0, 0, 0, 0 };
         private int[] m_numFailedTests = new int[] { 0, 0, 0, 0 };
         private int[] m_numDisabledTests = new int[] { 0, 0, 0, 0 };
@@ -72,8 +70,7 @@ namespace TestExecWin
         private WaitMode m_waitMode = (WaitMode)Properties.Settings.Default.IdxMaxWaitTime;
 
         private TestFunctionTreeViewItem[] TestFunctionsToExecute;
-        private TestTreeViewItem[] TestGroupsToExecute;
-        TestTreeViewItem rootTestTreeViewItem = new TestTreeViewItem(null);
+        TestTreeViewItem rootTestTreeViewItem = new TestTreeViewItem(null, new TestGroupEntry(true, string.Empty));
 
         private static RoutedUICommand m_showSourceCommand = new RoutedUICommand("Show Shource", "ShowSource", typeof(TestExecWindowControl));
         private static RoutedUICommand m_debugCommand = new RoutedUICommand("Debug", "Debug", typeof(TestExecWindowControl));
@@ -131,9 +128,7 @@ namespace TestExecWin
         private void InitForTestExecution(RunMode in_runMode, int in_numTestsToExecute)
         {
             m_stoppedByUser = false;
-            m_idxRunAllTestFuncs = -1;
-            m_idxRunAllTestGroups = -1;
-            m_idxRunAllTestApps = -1;
+            m_idxRunSelectedTestFuncs = -1;
             m_curRunMode = in_runMode;
             int idx = (int)m_curRunMode;
             m_numExecutedTests[idx] = 0;
@@ -154,9 +149,7 @@ namespace TestExecWin
         enum State { IDLE, RUNNING, SUCCEEDED, FAILED };
         private State[] m_state = new State[] { State.IDLE, State.IDLE, State.IDLE, State.IDLE };
 
-        private int m_idxRunAllTestFuncs = -1;
-        private int m_idxRunAllTestGroups = -1;
-        private int m_idxRunAllTestApps = -1;
+        private int m_idxRunSelectedTestFuncs = -1;
 
         enum ExpImpMode { EXPORT_TO_FILE = 1, IMPPORT_FROM_FILE, IMPORT_FROM_SOLUTION, IMPORT_TEST_GROUPS_FROM_STARTUP_PROJECT, IMPORT_VISIBLE_TEST_FUNCS_FROM_STARTUP_PROJECT };
         private List<string> m_currentTestApps = new List<string>();
@@ -164,11 +157,8 @@ namespace TestExecWin
         private int m_idxCurrentTestApps = Properties.Settings.Default.IdxCurrentTestApps;
 
         private System.Windows.Media.Brush m_originalBrushWindow;
-        private System.Windows.Media.Brush m_originalBrushTextBlock;
-        private System.Windows.Media.Brush m_originalBrushButton;
         private System.Windows.Threading.DispatcherTimer m_refreshTimer = new System.Windows.Threading.DispatcherTimer();
         private bool m_refreshTimerIsActive = false;
-        HashSet<string> m_selectedTestGroups;
 
         public TestExecWindowControl()
             : base()
@@ -182,8 +172,6 @@ namespace TestExecWin
                 m_state[i] = State.IDLE;
             }
             m_originalBrushWindow = mainGrid.Background;
-            m_originalBrushTextBlock = txtInfoStarArgTestGroup.Background;
-
             {
                 List<string> data = new List<string>();
                 data.Add("sort as read");
@@ -267,10 +255,6 @@ namespace TestExecWin
                 m_dataDescTestApps.Add(Properties.Settings.Default.DescTestApps6);
                 m_dataDescTestApps.Add(Properties.Settings.Default.DescTestApps7);
                 m_dataDescTestApps.Add(Properties.Settings.Default.DescTestApps8);
-
-                cbxDescTestApps.ItemsSource = m_dataDescTestApps;
-                cbxDescTestApps.SelectedIndex = m_idxCurrentTestApps;
-                cbxDescTestApps.IsEditable = true;
             }
         }
 
@@ -304,35 +288,6 @@ namespace TestExecWin
         [SuppressMessage("Microsoft.Globalization", "CA1300:SpecifyMessageBoxOptions", Justification = "Sample code")]
         [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1300:ElementMustBeginWithUpperCaseLetter", Justification = "Default event handler naming pattern")]
 
-        private void btnRunTestAll_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (m_useDebugger)
-                {
-                    m_mainEvents.OnStartDebugging(cbxDefaultArgs.Text);
-                }
-                else // regular execution
-                {
-                    if (m_state[(int)RunMode.TEST_STARTUP_PROJECT] == State.RUNNING)
-                    {
-                        StopExecution();
-                    }
-                    else
-                    {
-                        InitForTestExecution(RunMode.TEST_STARTUP_PROJECT, 1);
-                        RefreshState();
-                        StartProcess(m_projectInfo.GetExePath(), cbxDefaultArgs.Text, m_projectInfo.SelectedProject.TargetDirPath);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                WriteLine(1, "EXCEPTION: " + ex.ToString());
-            }
-
-        }
-
         private void RunSelectedTestFunctions()
         {
             for (int i = 0; i < 4; ++i)
@@ -363,13 +318,14 @@ namespace TestExecWin
             {
                 x.TestResult.Result = Result.Tentative;
                 x.TestResult.ProcessOutput = string.Empty;
-                x.TreeViewParent.ReflectTestResultsFromChilds();
+                x.TreeViewParent.TestResult.Result = Result.Tentative;
+                x.TreeViewParent.TestResult.ProcessOutput = string.Empty;
             });
 
             if (TestFunctionsToExecute.Length > 0)
             {
                 InitForTestExecution(RunMode.TEST_FUNCS, TestFunctionsToExecute.Length);
-                m_idxRunAllTestFuncs = 0;
+                m_idxRunSelectedTestFuncs = 0;
                 StartTestFunc(0);
             }
         }
@@ -395,9 +351,19 @@ namespace TestExecWin
 
         private void btnRunAllTestFuncs_Click(object sender, RoutedEventArgs e)
         {
+            RunAllTests(false);
+        }
+
+        private void btnDebugAllTestFuncs_Click(object sender, RoutedEventArgs e)
+        {
+            RunAllTests(true);
+        }
+
+        private void RunAllTests(bool debug)
+        {
             try
             {
-                if (m_state[(int)RunMode.TEST_FUNCS] == State.RUNNING || m_state[(int)RunMode.TEST_GROUPS] == State.RUNNING)
+                if (m_state[(int)RunMode.TEST_FUNCS] == State.RUNNING)
                 {
                     StopExecution();
                 }
@@ -414,44 +380,19 @@ namespace TestExecWin
 
                     if (rootTestTreeViewItem.TreeViewItems.Count > 0)
                     {
-                        TestGroupsToExecute = rootTestTreeViewItem.TreeViewItems.First().GetMainTestGroups();
                         //clear test results
-                        TestGroupsToExecute.ToList().ForEach(x =>
-                            {
-                                x.TestResult.Result = Result.Tentative;
-                                x.TestResult.ProcessOutput = string.Empty;
-                                x.PropagateTestResultToAllChilds();
-                            });
-                        if (TestGroupsToExecute.Length > 0)
+                        rootTestTreeViewItem.TestResult.Result = Result.Tentative;
+                        rootTestTreeViewItem.TestResult.ProcessOutput = string.Empty;
+                        rootTestTreeViewItem.TreeViewItems.First().GetOverallChildItems().ToList().ForEach(x =>
                         {
-                            InitForTestExecution(RunMode.TEST_GROUPS, TestGroupsToExecute.Length);
-                            m_idxRunAllTestGroups = 0;
-                            StartTestGroup(0);
-                        }
+                            x.TestResult.Result = Result.Tentative;
+                            x.TestResult.ProcessOutput = string.Empty;
+                        });
+
+                        InitForTestExecution(RunMode.TEST_ALL, rootTestTreeViewItem.OverallTestFunctionCount);
+                        StartAllTests(debug);
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                WriteLine(1, "EXCEPTION: " + ex.ToString());
-            }
-        }
-
-        private void btnGoToSrcTestFunc_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                //TODO
-                /*if (lstTestFuncs.SelectedItem == null)
-                {
-                    WriteLine(1, "No test func selected!");
-                }
-                else
-                {
-                    WriteLine(3, "GoTo src: selIndex=" + lstTestFuncs.SelectedIndex);
-                    m_mainEvents.OnOpenSourceFile(m_testFuncs[lstTestFuncs.SelectedIndex].fileFullPath,
-                        m_testFuncs[lstTestFuncs.SelectedIndex].lineNum);
-                }*/
             }
             catch (Exception ex)
             {
@@ -463,7 +404,6 @@ namespace TestExecWin
         {
             m_logVisible = !m_logVisible;
             RefreshDisplay();
-
         }
 
         private void btnClearEvents_Click(object sender, RoutedEventArgs e)
@@ -543,34 +483,12 @@ namespace TestExecWin
 
         }
 
-        private void chkUseDebugger_CheckBoxChanged(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                m_useDebugger = (bool)chkUseDebugger.IsChecked;
-                RefreshState();
-            }
-            catch (Exception ex)
-            {
-                WriteLine(1, "EXCEPTION: " + ex.ToString());
-            }
-
-        }
-
         private string GetInfoAboutCurrentProgress(RunMode in_runMode)
         {
             int idx = (int)in_runMode;
             if (m_state[idx] == State.RUNNING)
             {
-                if ((in_runMode == RunMode.TEST_APPS) && (m_idxRunAllTestApps >= 0))
-                {
-                    return " " + System.IO.Path.GetFileNameWithoutExtension(m_currentTestApps[m_idxRunAllTestApps])
-                         + " (" + (m_numExecutedTests[idx] + 1) + " of " + m_totalNumTestsToExecute[idx] + ")";
-                }
-                else
-                {
-                    return $" ({m_numExecutedTests[idx]} of {m_totalNumTestsToExecute[idx]}) ({m_numDisabledTests[idx]} disabled)";
-                }
+                return $" ({m_numExecutedTests[idx]} of {m_totalNumTestsToExecute[idx]}) ({m_numDisabledTests[idx]} disabled)";
             }
             return "";
         }
@@ -598,11 +516,7 @@ namespace TestExecWin
 
         private string GetInfoAboutCurrentTest()
         {
-            if ((m_curRunMode == RunMode.TEST_APPS) && (m_idxRunAllTestApps >= 0))
-            {
-                return System.IO.Path.GetFileNameWithoutExtension(m_currentTestApps[m_idxRunAllTestApps]);
-            }
-            return "";
+            return string.Empty;
         }
 
         /// [dispatch test terminate msg]
@@ -634,11 +548,6 @@ namespace TestExecWin
                 double totalNumMinutes = in_executionTime.TotalSeconds / 60.0;
                 durationStr = totalNumMinutes.ToString("F1") + "m ";
             }
-            //int totalNumSeconds = Convert.ToInt32(Math.Round(in_executionTime.TotalSeconds));
-            //int totalNumMinutes = totalNumSeconds / 60;
-            //int numSeconds = totalNumSeconds % 60;
-            //int numSecondsAsDecimalMinute = numSeconds / 6;
-            //string durationStr = totalNumMinutes + "," + numSecondsAsDecimalMinute + "m ";
 
             WriteLine(1, (result == Result.Failed ? "FAILED: " : (in_memLeaksDetected ? "FAILED (MEM_LEAKS): " : "OK: "))
                 + durationStr + GetInfoAboutCurrentTest() + " " + info);
@@ -657,21 +566,17 @@ namespace TestExecWin
             }
 
             var testResult = new TestResult() { Result = result, MemLeaksDetected = in_memLeaksDetected, ExecutionTime = in_executionTime };
-            if (m_idxRunAllTestGroups >= 0)
+            if (m_idxRunSelectedTestFuncs >= 0)
             {
-                TestGroupsToExecute[m_idxRunAllTestGroups].TestResult = testResult;
-                TestGroupsToExecute[m_idxRunAllTestGroups].TestResult.ProcessOutput = processOutput;
-                //We only get overall success/failed on group execution - only set "Success" - failed leads to "tentiative" result of all childs
-                if (testResult.Result == Result.Success)
-                {
-                    TestGroupsToExecute[m_idxRunAllTestGroups].PropagateTestResultToAllChilds();
-                }
+                TestFunctionsToExecute[m_idxRunSelectedTestFuncs].TestResult = testResult;
+                TestFunctionsToExecute[m_idxRunSelectedTestFuncs].TestResult.ProcessOutput = processOutput;
+                TestFunctionsToExecute[m_idxRunSelectedTestFuncs].TreeViewParent.ReflectTestResultsFromChilds();
             }
-            else if (m_idxRunAllTestFuncs >= 0)
+            else
             {
-                TestFunctionsToExecute[m_idxRunAllTestFuncs].TestResult = testResult;
-                TestFunctionsToExecute[m_idxRunAllTestFuncs].TestResult.ProcessOutput = processOutput;
-                TestFunctionsToExecute[m_idxRunAllTestFuncs].TreeViewParent.ReflectTestResultsFromChilds();
+                //Run all
+                rootTestTreeViewItem.TreeViewItems.First().TestResult = testResult;
+                rootTestTreeViewItem.TreeViewItems.First().TestResult.ProcessOutput = processOutput;
             }
 
             bool testSucceededUpToNow = (m_numFailedTests[idx] == 0);
@@ -683,65 +588,38 @@ namespace TestExecWin
 
             if (!m_stoppedByUser)
             {
-                if (m_idxRunAllTestGroups >= 0)
+                if (m_idxRunSelectedTestFuncs >= 0)
                 {
-                    ++m_idxRunAllTestGroups;
-                    if (m_idxRunAllTestGroups >= TestGroupsToExecute.Length)
+                    ++m_idxRunSelectedTestFuncs;
+                    if (m_idxRunSelectedTestFuncs >= TestFunctionsToExecute.Length)
                     {
-                        m_idxRunAllTestGroups = -1;
-                        CheckForFinalAction(RunMode.TEST_GROUPS);
+                        m_idxRunSelectedTestFuncs = -1;
                     }
                     else // start next test
                     {
-                        StartTestGroup(m_idxRunAllTestGroups);
+                        StartTestFunc(m_idxRunSelectedTestFuncs);
                     }
                 }
-                else if (m_idxRunAllTestFuncs >= 0)
-                {
-                    ++m_idxRunAllTestFuncs;
-                    if (m_idxRunAllTestFuncs >= TestFunctionsToExecute.Length)
-                    {
-                        m_idxRunAllTestFuncs = -1;
-                        CheckForFinalAction(RunMode.TEST_FUNCS);
-                    }
-                    else // start next test
-                    {
-                        StartTestFunc(m_idxRunAllTestFuncs);
-                    }
-                }
-                else if (m_idxRunAllTestApps >= 0)
-                {
-                    ++m_idxRunAllTestApps;
-                    if (m_idxRunAllTestApps >= m_currentTestApps.Count)
-                    {
-                        // last test app has terminated
-                        m_idxRunAllTestApps = -1;
-                        CheckForFinalAction(RunMode.TEST_APPS);
-                    }
-                    else // start next test
-                    {
-                        StartTestApp(m_idxRunAllTestApps);
-                    }
-                }
-                else
-                {
-                    CheckForFinalAction(RunMode.TEST_STARTUP_PROJECT);
-                }
-
             }
         }
 
-        private void StartTestGroup(int in_idx)
+        private void StartAllTests(bool debug)
         {
-            if (TestGroupsToExecute[in_idx].DisplayName == "<default>")
+            string args = cbxDefaultArgs.Text;
+            if (!args.Contains("--log_level"))
             {
-                // Simulate successful execution
-                TestTerminatedWithinGuiThread(Result.Success, "", "<execution skipped>", false, new TimeSpan(0), string.Empty);
-                return;
+                args += " --log_level=test_suite";
             }
-            m_state[(int)m_curRunMode] = State.RUNNING;
-            RefreshState();
-            StartProcess(m_projectInfo.GetExePath(), TestGroupsToExecute[in_idx].GetCmdString() + " " + cbxDefaultArgs.Text, m_projectInfo.SelectedProject.TargetDirPath);
+            if (debug)
+            {
+                m_mainEvents.OnStartDebugging(m_projectInfo.GetExePath() + " " + args);
+            }
+            else
+            {
+                m_state[(int)m_curRunMode] = State.RUNNING;
+                RefreshState();
+                StartProcess(m_projectInfo.GetExePath(), args, m_projectInfo.SelectedProject.TargetDirPath, true);
+            }
         }
 
         private void StartTestFunc(int in_idx)
@@ -754,36 +632,8 @@ namespace TestExecWin
             }
             else
             {
-                StartProcess(m_projectInfo.GetExePath(), TestFunctionsToExecute[in_idx].TestFuncEntry.GetCmdString() + " " + cbxDefaultArgs.Text, m_projectInfo.SelectedProject.TargetDirPath);
+                StartProcess(m_projectInfo.GetExePath(), TestFunctionsToExecute[in_idx].TestFuncEntry.GetCmdString() + " " + cbxDefaultArgs.Text, m_projectInfo.SelectedProject.TargetDirPath, false);
             }
-        }
-
-        private void StartTestApp(int in_idx)
-        {
-            string exePathWithOptionalArgs = m_currentTestApps[in_idx];
-            string exeToStart = exePathWithOptionalArgs;
-            string args = cbxDefaultArgs.Text;
-
-            // Check for optional cmd args after executable
-            string tmpExeToStart = exeToStart.ToLower();
-            int posStartExtension = tmpExeToStart.LastIndexOf(".exe");
-            if (posStartExtension >= 0)
-            {
-                int posStartArgs = posStartExtension + 5;
-                if (posStartArgs < exeToStart.Length)
-                {
-                    string specificArgs = exePathWithOptionalArgs.Substring(posStartArgs);
-                    if (specificArgs.Length > 0)
-                    {
-                        args = specificArgs + " " + args;
-                        exeToStart = exePathWithOptionalArgs.Substring(0, posStartArgs - 1);
-                    }
-                }
-
-            }
-            m_state[(int)m_curRunMode] = State.RUNNING;
-            RefreshState();
-            StartProcess(exeToStart, args, System.IO.Path.GetDirectoryName(exeToStart));
         }
 
         private void SetState(bool in_success)
@@ -800,8 +650,6 @@ namespace TestExecWin
             switch (m_state[(int)in_runMode])
             {
                 case State.IDLE:
-                    tb.Background = m_originalBrushTextBlock;
-                    //tb.Background = System.Windows.Media.Brushes.LightGray;
                     tb.Foreground = System.Windows.Media.Brushes.Black;
                     if (setText)
                     {
@@ -835,79 +683,24 @@ namespace TestExecWin
             }
         }
 
-        private void RefreshButtonState(State state, Button btn)
-        {
-            if (m_useDebugger)
-            {
-                btn.Background = m_originalBrushButton;
-                btn.Foreground = System.Windows.Media.Brushes.Black;
-            }
-            else
-            {
-                switch (state)
-                {
-                    case State.IDLE:
-                        btn.Background = m_originalBrushButton;
-                        btn.Foreground = System.Windows.Media.Brushes.Black;
-                        break;
-                    case State.RUNNING:
-                        btn.Background = System.Windows.Media.Brushes.Orange;
-                        btn.Foreground = System.Windows.Media.Brushes.Black;
-                        break;
-                    case State.SUCCEEDED:
-                        btn.Background = System.Windows.Media.Brushes.LightGreen;
-                        btn.Foreground = System.Windows.Media.Brushes.Black;
-                        break;
-                    case State.FAILED:
-                        btn.Background = System.Windows.Media.Brushes.Red;
-                        btn.Foreground = System.Windows.Media.Brushes.White;
-                        break;
-                }
-            }
-        }
-
         private void RefreshState()
         {
             if (m_state[(int)RunMode.TEST_FUNCS] != State.IDLE)
             {
-                RefreshState(RunMode.TEST_FUNCS, txtInfoStarArgTestGroup, GetInfoStartArgTestFunc());
+                RefreshState(RunMode.TEST_FUNCS, txtInfo, GetInfoStartArgTestFunc());
             }
-            else if (m_state[(int)RunMode.TEST_GROUPS] != State.IDLE)
-            {
-                RefreshState(RunMode.TEST_GROUPS, txtInfoStarArgTestGroup, GetInfoStartArgTestGroup());
-            }
-            else
-            {
-                RefreshState(RunMode.TEST_FUNCS, txtInfoStarArgTestGroup, GetInfoStartArgTestFunc());
-                RefreshState(RunMode.TEST_GROUPS, txtInfoStarArgTestGroup, GetInfoStartArgTestGroup());
-            }
+            RefreshState(RunMode.TEST_ALL, txtInfo, string.Empty, m_state[(int)RunMode.TEST_ALL] != State.IDLE);
 
-            RefreshState(RunMode.TEST_STARTUP_PROJECT, txtInfo, "", false);
-            RefreshState(RunMode.TEST_APPS, txtInfoTestApps, "");
             RefreshButtons();
         }
 
         private void RefreshButtons()
         {
-            if (m_useDebugger)
-            {
-                btnRunSelectedTestFunc.IsEnabled = true;
-                btnRunAllTestFuncs.IsEnabled = false;
+            bool running = (m_state[(int)RunMode.TEST_ALL] == State.RUNNING)
+                || (m_state[(int)RunMode.TEST_FUNCS] == State.RUNNING);
 
-                btnRunSelectedTestFunc.Content = "Debug";
-                btnRunAllTestFuncs.Content = "Run each";
-                return;
-            }
-
-            bool running = (m_state[(int)RunMode.TEST_STARTUP_PROJECT] == State.RUNNING)
-                || (m_state[(int)RunMode.TEST_GROUPS] == State.RUNNING)
-                || (m_state[(int)RunMode.TEST_FUNCS] == State.RUNNING)
-                || (m_state[(int)RunMode.TEST_APPS] == State.RUNNING);
-
-            chkUseDebugger.IsEnabled = !running;
-
-            btnRunSelectedTestFunc.IsEnabled = !running || ((m_state[(int)RunMode.TEST_FUNCS] == State.RUNNING) && (m_idxRunAllTestFuncs == -1));
-            btnRunAllTestFuncs.IsEnabled = !running || ((m_state[(int)RunMode.TEST_FUNCS] == State.RUNNING || m_state[(int)RunMode.TEST_GROUPS] == State.RUNNING) && (m_idxRunAllTestFuncs >= 0 || m_idxRunAllTestGroups >= 0));
+            btnRunSelectedTestFunc.IsEnabled = !running || ((m_state[(int)RunMode.TEST_FUNCS] == State.RUNNING) && (m_idxRunSelectedTestFuncs == -1));
+            btnRunAllTestFuncs.IsEnabled = !running || ((m_state[(int)RunMode.TEST_FUNCS] == State.RUNNING) && (m_idxRunSelectedTestFuncs >= 0) || (m_state[(int)RunMode.TEST_ALL] == State.RUNNING));
             btnOpenProtocolFile.IsEnabled = !running;
             btnRefreshAll.IsEnabled = !running;
 
@@ -1042,6 +835,86 @@ namespace TestExecWin
             //lstEvents.SelectedIndex = -1;
         }
 
+        internal void SetTestSuiteResult(string suitePath, Result result, string info, bool propagateResult)
+        {
+            if (!CheckAccess())
+            {
+                Application.Current.Dispatcher.Invoke(new Action(() => { SetTestSuiteResult(suitePath, result, info, propagateResult); }));
+            }
+            else
+            {
+                var item = rootTestTreeViewItem.TreeViewItems.First().GetOverallTestGroups().FirstOrDefault(x => x.TestGroupEntry.Name == suitePath.Trim('/'));
+                if (item != null)
+                {
+                    item.TestResult.Result = result;
+                    item.TestResult.ProcessOutput = info;
+                    if (propagateResult)
+                    {
+                        item.PropagateTestResultToAllChilds();
+                    }
+                    if (result == Result.Disabled)
+                    {
+                        m_numDisabledTests[(int)m_curRunMode] += item.OverallTestFunctionCount;
+                    }
+                }
+                else
+                {
+                    //Unfortunately, BOOST interprets BOOST_DATA_TEST_CASE as Suite so we have to seek for that, too
+                    var dataDestCaseItem = rootTestTreeViewItem.TreeViewItems.First().GetOverallTestFunctions().FirstOrDefault(x => x.TestFuncEntry.IsDataTestCase && x.TestFuncEntry.TestFunction == suitePath);
+                    if (dataDestCaseItem != null)
+                    {
+                        dataDestCaseItem.TestResult.Result = result;
+                        dataDestCaseItem.TestResult.ProcessOutput = info;
+                        if (propagateResult)
+                        {
+                            item.PropagateTestResultToAllChilds();
+                        }
+                    }
+                    else
+                    {
+                        WriteLine(1, $"ERROR: No test group found with suite '{suitePath}'");
+                    }
+                }
+
+                RefreshState();
+            }
+        }
+
+        internal void SetTestCaseResult(string suitePath, string name, Result result, string info)
+        {
+            if (!CheckAccess())
+            {
+                Application.Current.Dispatcher.Invoke(new Action(() => { SetTestCaseResult(suitePath, name, result, info); }));
+            }
+            else
+            {
+                var item = rootTestTreeViewItem.TreeViewItems.First().GetOverallTestFunctions().FirstOrDefault(x => x.TestFuncEntry.TestGroup.Name == suitePath.Trim('/') && x.TestFuncEntry.TestFunction == name);
+                if (item != null)
+                {
+                    item.TestResult.Result = result;
+                    item.TestResult.ProcessOutput = info ?? string.Empty;
+                }
+                else
+                {
+                    WriteLine(1, $"ERROR: No test case found with suite '{suitePath}' and name '{name}'");
+                }
+                m_numExecutedTests[(int)m_curRunMode]++;
+
+                switch (result)
+                {
+                    case Result.Disabled:
+                        m_numDisabledTests[(int)m_curRunMode]++;
+                        break;
+                    case Result.Failed:
+                        m_numFailedTests[(int)m_curRunMode]++;
+                        break;
+                    default:
+                        break;
+                }
+                RefreshState();
+            }
+        }
+
         internal void SetTestInfo(ProjectInfo in_projectInfo)
         {
             m_projectInfo = in_projectInfo;
@@ -1059,19 +932,6 @@ namespace TestExecWin
                 RefreshTestGroupList();
             }
             RefreshDisplay();
-        }
-
-        private string GetInfoStartArgTestGroup()
-        {
-            switch (m_projectInfo.SelectedProject.AppType)
-            {
-                case AppType.BOOST:
-                    return "Select test suite / edit cmd";
-                case AppType.TTB:
-                    return "Select test file / edit cmd";
-                default:
-                    return "--";
-            }
         }
 
         private string GetInfoStartArgTestFunc()
@@ -1119,7 +979,7 @@ namespace TestExecWin
 
         private void AddTestGroupEntryToTreeView(NodeList<TestGroupEntry> testGroupEntryNode, TestTreeViewItem parentTreeView)
         {
-            TestTreeViewItem treeViewItem = new TestTreeViewItem(parentTreeView) { DisplayName = testGroupEntryNode.Value.Name == string.Empty ? "<default>" : testGroupEntryNode.Value.Name };
+            TestTreeViewItem treeViewItem = new TestTreeViewItem(parentTreeView, testGroupEntryNode.Value) { DisplayName = testGroupEntryNode.Value.Name == string.Empty ? "<default>" : testGroupEntryNode.Value.Name };
 
             //add test functions
             foreach (var testFunc in testGroupEntryNode.Value.testFuncs)
@@ -1163,7 +1023,7 @@ namespace TestExecWin
                 }
 
                 testTreeView.Items.Clear();
-                rootTestTreeViewItem = new TestTreeViewItem(null) { DisplayName = "dummyRoot" };
+                rootTestTreeViewItem = new TestTreeViewItem(null, new TestGroupEntry(true, string.Empty)) { DisplayName = "dummyRoot" };
                 AddTestGroupEntryToTreeView(m_projectInfo.SelectedProject.TestGroups, rootTestTreeViewItem);
                 rootTestTreeViewItem.TreeViewItems.First().OverallSortAllChilds(sortOrder);
                 testTreeView.Items.Add(rootTestTreeViewItem.TreeViewItems.First());
@@ -1252,147 +1112,6 @@ namespace TestExecWin
             Properties.Settings.Default.Save();
         }
 
-        private void cbxDescTestApps_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (cbxDescTestApps.SelectedIndex >= 0)
-            {
-                m_idxCurrentTestApps = cbxDescTestApps.SelectedIndex;
-                Properties.Settings.Default.IdxCurrentTestApps = m_idxCurrentTestApps;
-                Properties.Settings.Default.Save();
-                m_state[(int)RunMode.TEST_APPS] = State.IDLE;
-                LoadCurrentTestApps();
-                RefreshState();
-            }
-        }
-
-        private void LoadCurrentTestApps()
-        {
-            switch (m_idxCurrentTestApps)
-            {
-                case 0:
-                    txtTestApps.Text = Properties.Settings.Default.TestApps1;
-                    break;
-                case 1:
-                    txtTestApps.Text = Properties.Settings.Default.TestApps2;
-                    break;
-                case 2:
-                    txtTestApps.Text = Properties.Settings.Default.TestApps3;
-                    break;
-                case 3:
-                    txtTestApps.Text = Properties.Settings.Default.TestApps4;
-                    break;
-                case 4:
-                    txtTestApps.Text = Properties.Settings.Default.TestApps5;
-                    break;
-                case 5:
-                    txtTestApps.Text = Properties.Settings.Default.TestApps6;
-                    break;
-                case 6:
-                    txtTestApps.Text = Properties.Settings.Default.TestApps7;
-                    break;
-                default:
-                    txtTestApps.Text = Properties.Settings.Default.TestApps8;
-                    break;
-            }
-        }
-
-        private void SaveCurrentTestApps()
-        {
-            switch (m_idxCurrentTestApps)
-            {
-                case 0:
-                    Properties.Settings.Default.DescTestApps1 = cbxDescTestApps.Text;
-                    Properties.Settings.Default.TestApps1 = txtTestApps.Text;
-                    break;
-                case 1:
-                    Properties.Settings.Default.DescTestApps2 = cbxDescTestApps.Text;
-                    Properties.Settings.Default.TestApps2 = txtTestApps.Text;
-                    break;
-                case 2:
-                    Properties.Settings.Default.DescTestApps3 = cbxDescTestApps.Text;
-                    Properties.Settings.Default.TestApps3 = txtTestApps.Text;
-                    break;
-                case 3:
-                    Properties.Settings.Default.DescTestApps4 = cbxDescTestApps.Text;
-                    Properties.Settings.Default.TestApps4 = txtTestApps.Text;
-                    break;
-                case 4:
-                    Properties.Settings.Default.DescTestApps5 = cbxDescTestApps.Text;
-                    Properties.Settings.Default.TestApps5 = txtTestApps.Text;
-                    break;
-                case 5:
-                    Properties.Settings.Default.DescTestApps6 = cbxDescTestApps.Text;
-                    Properties.Settings.Default.TestApps6 = txtTestApps.Text;
-                    break;
-                case 6:
-                    Properties.Settings.Default.DescTestApps7 = cbxDescTestApps.Text;
-                    Properties.Settings.Default.TestApps7 = txtTestApps.Text;
-                    break;
-                default:
-                    Properties.Settings.Default.DescTestApps8 = cbxDescTestApps.Text;
-                    Properties.Settings.Default.TestApps8 = txtTestApps.Text;
-                    break;
-            }
-            Properties.Settings.Default.Save();
-
-            m_dataDescTestApps[m_idxCurrentTestApps] = cbxDescTestApps.Text;
-            cbxDescTestApps.ItemsSource = null;
-            cbxDescTestApps.ItemsSource = m_dataDescTestApps;
-            cbxDescTestApps.SelectedIndex = m_idxCurrentTestApps;
-        }
-
-        private void btnSaveTestApps_Click(object sender, RoutedEventArgs e)
-        {
-            WriteLine(3, "Save test apps");
-            SaveCurrentTestApps();
-        }
-        private void btnReloadTestApps_Click(object sender, RoutedEventArgs e)
-        {
-            WriteLine(3, "Reload test apps");
-            LoadCurrentTestApps();
-        }
-        private void btnClearTestApps_Click(object sender, RoutedEventArgs e)
-        {
-            txtTestApps.Text = "";
-        }
-
-        private void btnRunAllTestApps_Click(object sender, RoutedEventArgs e)
-        {
-            WriteLine(3, "Run all test apps");
-            string txt = txtTestApps.Text;
-            string[] tmpTestApps = txt.Split(new Char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-            m_currentTestApps.Clear();
-            foreach (var app in tmpTestApps)
-            {
-                app.Trim();
-                if (app.IndexOf("//") != 0) // skip comment lines
-                {
-                    m_currentTestApps.Add(app);
-                }
-            }
-
-            try
-            {
-                if (m_state[(int)RunMode.TEST_APPS] == State.RUNNING)
-                {
-                    StopExecution();
-                }
-                else
-                {
-                    if (m_currentTestApps.Count > 0)
-                    {
-                        InitForTestExecution(RunMode.TEST_APPS, m_currentTestApps.Count);
-                        m_idxRunAllTestApps = 0;
-                        StartTestApp(0);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                WriteLine(1, "EXCEPTION: " + ex.ToString());
-            }
-        }
-
         private string GetExportInfo(bool in_withTimeStamp)
         {
             string info = "Exported from TestExecWin - " + txtInfo.Text;
@@ -1449,96 +1168,7 @@ namespace TestExecWin
             }
         }
 
-        private void ExportTestAppsToFile()
-        {
-            System.Windows.Forms.SaveFileDialog saveFileDialog = new System.Windows.Forms.SaveFileDialog();
-            saveFileDialog.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
-            saveFileDialog.FileName = cbxDescTestApps.Text;
-            saveFileDialog.RestoreDirectory = true;
-
-            if (saveFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                System.IO.File.WriteAllText(saveFileDialog.FileName, txtTestApps.Text);
-            }
-        }
-
-        private void ImportTestAppsFromFile()
-        {
-            System.Windows.Forms.OpenFileDialog openFileDialog = new System.Windows.Forms.OpenFileDialog();
-            openFileDialog.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
-            openFileDialog.RestoreDirectory = true;
-
-            if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                string readText = System.IO.File.ReadAllText(openFileDialog.FileName);
-                txtTestApps.Text += "\n// Imported from file " + openFileDialog.FileName + "\n";
-                txtTestApps.Text += readText;
-            }
-        }
-
-        private void ImportTestAppsFromSolution()
-        {
-            txtTestApps.Text += "\n// Imported executables from current solution " + System.IO.Path.GetFileName(m_projectInfo.solutionFullPath) + "\n";
-            string foundExePaths = m_mainEvents.OnGetExecutablesFromCurrentSolution();
-            txtTestApps.Text += foundExePaths;
-        }
-
-        private void ImportTestAppsFromCurrentTestGroups()
-        {
-            string executablesWithStartArgs = "\n// Imported test suites from " + m_projectInfo.SelectedProject + "\n";
-            /*TODO for (int i = 0; i < m_testGroups.Count; ++i)
-            {
-                executablesWithStartArgs += m_projectInfo.GetExePath() + " " + m_testGroups[i].GetCmdString() + "\n";
-            }
-            txtTestApps.Text += executablesWithStartArgs;*/
-        }
-
-        private void ImportTestAppsFromCurrentTestFuncs()
-        {
-            string executablesWithStartArgs = "\n// Imported visible test cases from " + m_projectInfo.SelectedProject + "\n";
-            /*TODO for (int i = 0; i < m_testFuncs.Count; ++i)
-            {
-                executablesWithStartArgs += m_projectInfo.GetExePath() + " " + m_testFuncs[i].GetCmdString() + "\n";
-            }
-            txtTestApps.Text += executablesWithStartArgs;*/
-        }
-
-        private void cbxExportImportTestApps_SelectionChangeCommitted(object sender, SelectionChangedEventArgs e)
-        {
-            try
-            {
-                switch (cbxExportImportTestApps.SelectedIndex)
-                {
-                    case (int)ExpImpMode.EXPORT_TO_FILE:
-                        ExportTestAppsToFile();
-                        break;
-                    case (int)ExpImpMode.IMPPORT_FROM_FILE:
-                        ImportTestAppsFromFile();
-                        break;
-                    case (int)ExpImpMode.IMPORT_FROM_SOLUTION:
-                        ImportTestAppsFromSolution();
-                        break;
-                    case (int)ExpImpMode.IMPORT_TEST_GROUPS_FROM_STARTUP_PROJECT:
-                        ImportTestAppsFromCurrentTestGroups();
-                        break;
-                    case (int)ExpImpMode.IMPORT_VISIBLE_TEST_FUNCS_FROM_STARTUP_PROJECT:
-                        ImportTestAppsFromCurrentTestFuncs();
-                        break;
-                    default:
-                        break;
-                }
-
-                cbxExportImportTestApps.SelectedIndex = 0; // reset selection to allow mulltiple triggers for same list index
-                // Remark: ListItem 0 is declared as invisible (="collapsed", see xaml) within list. This item is used to always show the standard text.
-                // The combobox is oonly used to trigger an action from the list and not to store and display a current selection!
-            }
-            catch (Exception ex)
-            {
-                WriteLine(1, "EXCEPTION: " + ex.ToString());
-            }
-        }
-
-        private void StartProcess(string exePath, string args, string workDir)
+        private void StartProcess(string exePath, string args, string workDir, bool enableBoostParsing)
         {
             int waitTimeMs = GetMaxWaitTimeInMs();
             if (waitTimeMs>0)
@@ -1546,7 +1176,7 @@ namespace TestExecWin
                 m_executionTimer.Interval = waitTimeMs;
                 m_executionTimer.Start();
             }
-            m_executor.StartProcess(exePath, args, workDir);
+            m_executor.StartProcess(exePath, args, workDir, enableBoostParsing);
         }
         private int GetMaxWaitTimeInMs()
         {
@@ -1588,19 +1218,11 @@ namespace TestExecWin
             try
             {
                 string fileName = "TextExecWin.";
-                if (in_runMode == RunMode.TEST_APPS)
-                {
-                    fileName += "RunTestApps." + cbxDescTestApps.Text;
-                }
-                else if (in_runMode == RunMode.TEST_GROUPS)
-                {
-                    fileName += "RunAllTestGroups." + txtInfo.Text;
-                }
-                else if (in_runMode == RunMode.TEST_FUNCS)
+                if (in_runMode == RunMode.TEST_FUNCS)
                 {
                     fileName += "RunAllTestFuncs." + txtInfo.Text;
                 }
-                else if (in_runMode == RunMode.TEST_STARTUP_PROJECT)
+                else if (in_runMode == RunMode.TEST_ALL)
                 {
                     fileName += "SingleRun." + txtInfo.Text;
                 }
@@ -1632,78 +1254,5 @@ namespace TestExecWin
                 WriteLine(1, "SaveLog-EXCEPTION: " + ex.ToString());
             }
         }
-        private void CheckForFinalAction(RunMode in_runMode)
-        {
-            try
-            {
-                bool shutdown = (bool)chkShutdown.IsChecked;
-                if (shutdown)
-                {
-                    SaveLog(in_runMode);
-
-                    bool reallyShutdown = true; // deactivate for testing
-                    if (reallyShutdown)
-                    {
-                        // Possible extension: First check for existence of predefined batch file to perform specific shutdown actions
-                        //string nameBatchFile="TestExecWin.Shutdown.cmd";
-                        //string foundBatchFilePath = "";
-                        //System.Collections.Generic.List<string> possibleFilePaths = new System.Collections.Generic.List<string>();
-                        //if (m_projectInfo.targetDirPath != "<not set>")
-                        //{
-                        //    possibleFilePaths.Add(m_projectInfo.targetDirPath);
-                        //}
-                        //possibleFilePaths.Add(System.IO.Path.GetTempPath());
-                        //foreach (string fileDir in possibleFilePaths)
-                        //{
-                        //    string tmpPath = fileDir + nameBatchFile;
-                        //    if (System.IO.File.Exists(tmpPath))
-                        //    {
-                        //        foundBatchFilePath = tmpPath;
-                        //        break;
-                        //    }
-                        //    WriteLine(1, "Batch not found: " + tmpPath);
-                        //}
-                        //if (foundBatchFilePath.Length>0)
-                        //{
-                        //    WriteLine(1, "Trying to shutdown with " + foundBatchFilePath + "...");
-                        //    Process.Start(foundBatchFilePath);
-                        //}
-                        //else
-                        {
-                            // WriteLine(1, "No predefined batch file found, now trying to shutdown with simple shutdown command...");
-                            WriteLine(1, "Now trying to shutdown with simple command shutdown /s /f ...");
-                            Process.Start("shutdown", "/s /f /t 0");
-                        }
-                    }
-                    else
-                    {
-                        WriteLine(1, "Shutdown is skipped");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                WriteLine(1, "CheckForFinalAction-EXCEPTION: " + ex.ToString());
-            }
-        }
-
-        private void chkShutdown_CheckBoxChanged(object sender, RoutedEventArgs e)
-        {
-            bool selectedForShutdown = (bool)chkShutdown.IsChecked;
-            if (selectedForShutdown)
-            {
-                System.Windows.Media.SolidColorBrush shutDownColor = System.Windows.Media.Brushes.Yellow;
-                this.Background = shutDownColor;
-                mainGrid.Background = shutDownColor;
-                tabControl.Background = shutDownColor;
-            }
-            else
-            {
-                this.Background = m_originalBrushWindow;
-                mainGrid.Background = m_originalBrushWindow;
-                tabControl.Background = m_originalBrushWindow;
-            }
-        }
-
     }
 }

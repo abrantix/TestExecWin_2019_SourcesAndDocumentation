@@ -19,6 +19,7 @@ namespace TestExecWin
 	{
 		static ImageSource OkIcon = LoadImageFromResource("Ok.png");
 		static ImageSource ErrorIcon = LoadImageFromResource("Error.png");
+		static ImageSource DisabledIcon = LoadImageFromResource("Cancel_bw.png");
 
 		public ObservableCollection<TreeViewItemBase> TreeViewItems { get; set; }
 		public TestResult testResult;
@@ -78,6 +79,11 @@ namespace TestExecWin
 				TestResult.Result = Result.Failed;
 				UpdateIcon();
 			}
+			else if (testFunctions.Any(x => x.TestResult.Result == Result.Disabled))
+			{
+				TestResult.Result = Result.Disabled;
+				UpdateIcon();
+			}
 		}
 
 		public void PropagateTestResultToAllChilds()
@@ -102,7 +108,11 @@ namespace TestExecWin
 					case Result.Failed:
 						Icon = ErrorIcon;
 						break;
-					
+
+					case Result.Disabled:
+						Icon = DisabledIcon;
+						break;
+
 					default:
 						Icon = null;
 						break;
@@ -120,6 +130,16 @@ namespace TestExecWin
 
 				return childItemCount;
 			}
+		}
+
+		public TestTreeViewItem[] GetOverallTestGroups()
+		{
+			var list = new List<TreeViewItemBase>();
+			list.AddRange(TreeViewItems.Where(x => x.GetType() == typeof(TestTreeViewItem)));
+			//recursive call for childs
+			TreeViewItems.ToList().ForEach(q => list.AddRange(q.GetOverallTestGroups()));
+
+			return list.Cast<TestTreeViewItem>().ToArray();
 		}
 
 		public TestFunctionTreeViewItem[] GetOverallTestFunctions()

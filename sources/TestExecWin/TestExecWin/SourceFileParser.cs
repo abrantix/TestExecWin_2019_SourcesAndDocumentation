@@ -69,6 +69,7 @@ namespace TestExecWin
         public int lineIdx { get; set; }
         
         public bool BoostMacroDisabled { get; set; }
+        public bool IsDataTestCase { get; set; }
         public Node<string> GroupNode { get; set; }
 
         public ParseInfo(string in_fileFullPath)
@@ -78,6 +79,7 @@ namespace TestExecWin
             lineIdx = 0;
             GroupNode = new Node<string>(string.Empty);
             BoostMacroDisabled = false;
+            IsDataTestCase = false;
             //testGroups = new System.Collections.Generic.List<string>(); // hierarchy of test groups
         }
         public int GetLineNum()
@@ -432,11 +434,12 @@ namespace TestExecWin
             // During parsing we store information about found description,
             // test suite and current line index within ParseInfo
             ParseInfo parseInfo = new ParseInfo(in_file.FullName);
-
+            bool currentSuiteDisabled = false;
             while (parseInfo.lineIdx < numLines)
             {
                 string line = lines[parseInfo.lineIdx];
                 parseInfo.BoostMacroDisabled = IsBoostMacroDisabled(line);
+                parseInfo.IsDataTestCase = false;
                 if (LineContainsMacro("TTB_TEST_FUNC_DESC",line))
                 {
                     MacroInfo macro = ReadMacro(parseInfo,
@@ -447,7 +450,7 @@ namespace TestExecWin
                         project.AppType = AppType.TTB;
                         parseInfo.RemoveAllTestGroups();
                         parseInfo.AddTestGroup(in_file.Name);
-                        CreateTestFuncInfo(project, parseInfo);
+                        CreateTestFuncInfo(project, parseInfo, currentSuiteDisabled);
                     }
                 }
                 else if (LineContainsMacro("TTB_TEST_FUNC",line))
@@ -460,7 +463,7 @@ namespace TestExecWin
                         project.AppType = AppType.TTB;
                         parseInfo.RemoveAllTestGroups();
                         parseInfo.AddTestGroup(in_file.Name);
-                        CreateTestFuncInfo(project, parseInfo);
+                        CreateTestFuncInfo(project, parseInfo, currentSuiteDisabled);
                     }
                 }
                 else if (LineContainsMacro("BOOST_AUTO_TEST_CASE_TEMPLATE", line))
@@ -473,7 +476,7 @@ namespace TestExecWin
                         // Add "*" for correct call of test case
                         parseInfo.description += "*";
                         project.AppType = AppType.BOOST;
-                        CreateTestFuncInfo(project, parseInfo);
+                        CreateTestFuncInfo(project, parseInfo, currentSuiteDisabled);
                     }
                 }
                 else if (LineContainsMacro("BOOST_AUTO_TEST_CASE",line))
@@ -484,7 +487,7 @@ namespace TestExecWin
                     {
                         parseInfo.description = macro.param1;
                         project.AppType = AppType.BOOST;
-                        CreateTestFuncInfo(project, parseInfo);
+                        CreateTestFuncInfo(project, parseInfo, currentSuiteDisabled);
                     }
                 }
                 else if (LineContainsMacro("BOOST_DATA_TEST_CASE", line))
@@ -495,7 +498,8 @@ namespace TestExecWin
                     {
                         parseInfo.description = macro.param1;
                         project.AppType = AppType.BOOST;
-                        CreateTestFuncInfo(project, parseInfo);
+                        parseInfo.IsDataTestCase = true;
+                        CreateTestFuncInfo(project, parseInfo, currentSuiteDisabled);
                     }
                 }
                 else if (LineContainsMacro("TTB_BOOST_TEST_CASE",line))
@@ -508,7 +512,7 @@ namespace TestExecWin
                     {
                         parseInfo.description = macro.param1;
                         project.AppType = AppType.BOOST;
-                        CreateTestFuncInfo(project, parseInfo);
+                        CreateTestFuncInfo(project, parseInfo, currentSuiteDisabled);
                     }
                 }
                 else if (LineContainsMacro("BOOST_FIXTURE_TEST_CASE", line))
@@ -519,7 +523,7 @@ namespace TestExecWin
                     {
                         parseInfo.description = macro.param1;
                         project.AppType = AppType.BOOST;
-                        CreateTestFuncInfo(project, parseInfo);
+                        CreateTestFuncInfo(project, parseInfo, currentSuiteDisabled);
                     }
                 }
                 else if (LineContainsMacro("TTB_BOOST_FIXTURE_TEST_CASE", line))
@@ -530,7 +534,7 @@ namespace TestExecWin
                     {
                         parseInfo.description = macro.param1;
                         project.AppType = AppType.BOOST;
-                        CreateTestFuncInfo(project, parseInfo);
+                        CreateTestFuncInfo(project, parseInfo, currentSuiteDisabled);
                     }
                 }
                 else if (LineContainsMacro("RUN_TEST_CASE",line))
@@ -541,7 +545,7 @@ namespace TestExecWin
                     {
                         parseInfo.description = macro.param1;
                         project.AppType = AppType.BOOST;
-                        CreateTestFuncInfo(project, parseInfo);
+                        CreateTestFuncInfo(project, parseInfo, currentSuiteDisabled);
                     }
                 }
                 else if(LineContainsMacro("BOOST_AUTO_TEST_SUITE_END",line))
@@ -556,6 +560,7 @@ namespace TestExecWin
                     {
                         parseInfo.description = macro.param1;
                         parseInfo.AddTestGroup(parseInfo.description);
+                        currentSuiteDisabled = parseInfo.BoostMacroDisabled;
                     }
                }
                 else if (LineContainsMacro("BOOST_FIXTURE_TEST_SUITE",line))
@@ -566,6 +571,7 @@ namespace TestExecWin
                     {
                         parseInfo.description = macro.param1;
                         parseInfo.AddTestGroup(parseInfo.description);
+                        currentSuiteDisabled = parseInfo.BoostMacroDisabled;
                     }
                 }
 
@@ -727,7 +733,7 @@ namespace TestExecWin
         }
 
         /// [parser_func_info]
-        private void CreateTestFuncInfo(Project project, ParseInfo parseInfo)
+        private void CreateTestFuncInfo(Project project, ParseInfo parseInfo, bool currentSuiteDisabled)
         {
             //Create test group path(s) if not existent
             bool isRoot = true;
@@ -765,9 +771,10 @@ namespace TestExecWin
             }
 
             // Store the found test function description
-            TestFuncEntry tf = new TestFuncEntry(project.AppType == AppType.BOOST, currentTargetNode.Value, parseInfo.BoostMacroDisabled);
+            TestFuncEntry tf = new TestFuncEntry(project.AppType == AppType.BOOST, currentTargetNode.Value, parseInfo.BoostMacroDisabled || currentSuiteDisabled);
             tf.TestFunction = parseInfo.description;
             tf.FileFullPath = parseInfo.FileFullPath;
+            tf.IsDataTestCase = parseInfo.IsDataTestCase;
             tf.LineNum = parseInfo.GetLineNum();
             currentTargetNode.Value.testFuncs.Add(tf);
 
