@@ -29,7 +29,6 @@ C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\Tes
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Release\VSCT.write.1.tlog
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Release\resources.json
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Release\ctoFiles.json
-C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Release\VSPackage.resources.original
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Release\mergeCto.cache
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Release\TestExecWin.csproj.CoreCompileInputs.cache
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Release\TestExecWin.csproj.CopyComplete

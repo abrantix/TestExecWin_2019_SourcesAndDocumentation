@@ -103,7 +103,7 @@ namespace TestExecWin
         }
 
         /// [exec start process]
-        public void StartProcess(string exePath, string args, string workDir)
+        public void StartProcess(string exePath, string args, string workDir, bool enableBoostParsing)
         {
             try
             {
@@ -130,6 +130,7 @@ namespace TestExecWin
                 m_process.StartInfo.WorkingDirectory = workDir;
                 m_process.StartInfo.Arguments = args.Trim();
                 boostProcessOutputParser.Clear();
+                boostProcessOutputParser.EnableParsing = enableBoostParsing;
 
                 if (m_getNotificationWhenProcessTerminates)
                 {

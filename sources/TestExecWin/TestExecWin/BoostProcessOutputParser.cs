@@ -20,6 +20,12 @@ namespace TestExecWin
             public string TestSuite { get; set; }
             public string TestCase { get; set; }
             public string TestInfo { get; set; }
+            public int DataDrivenTestCaseIndex { get; set; }
+            public TestModuleEventArgs()
+                : base()
+            {
+                DataDrivenTestCaseIndex = -1;
+            }
         }
 
         public event EventHandler<TestModuleEventArgs> OnTestModuleEntered;
@@ -31,6 +37,8 @@ namespace TestExecWin
         public event EventHandler<TestModuleEventArgs> OnTestCaseEntered;
         public event EventHandler<TestModuleEventArgs> OnTestCaseLeft;
         public event EventHandler<TestModuleEventArgs> OnTestCaseSkipped;
+
+        public bool EnableParsing { get; set; }
 
         public enum TestExecInfoType
         { 
@@ -44,6 +52,12 @@ namespace TestExecWin
             public string TestType { get; set; }
             public string TestName { get; set; }
             public TestExecInfoType TestExecInfoType { get; set; }
+            public int DataDrivenTestCaseIndex { get; set; }
+
+            public TestExecInfo()
+            {
+                DataDrivenTestCaseIndex = -1;
+            }
         }
 
         public StringBuilder StandardOutputStringBuilder { get; private set; }
@@ -91,91 +105,120 @@ namespace TestExecWin
                 {
                     StandardOutputStringBuilder.AppendLine(outLine.Data);
                     CurrentContextStringBuilder.AppendLine(outLine.Data);
-                    var testLineInfo = ParseStandardOutputLine(line);
-                    if (testLineInfo != null)
+
+                    if (EnableParsing)
                     {
-                        switch (testLineInfo.TestType)
+                        var testLineInfo = ParseStandardOutputLine(line);
+                        if (testLineInfo != null)
                         {
-                            case "module":
-                                switch (testLineInfo.TestExecInfoType)
-                                {
-                                    case TestExecInfoType.Entering:
-                                        CurrentTestModule = testLineInfo.TestName;
-                                        CurrentTestCaseFailed = false;
-                                        CurrentContextStringBuilder.Clear();
-                                        OnTestModuleEntered?.Invoke(this, new TestModuleEventArgs() { TestModule = CurrentTestModule, TestSuite = GetCurrentSuiteStack(), TestCase = CurrentTestCase, TestExecInfoType = TestExecInfoType.Entering });
-                                        break;
-                                    case TestExecInfoType.Leaving:
-                                        CurrentTestSuite = string.Empty;
-                                        CurrentTestCase = string.Empty;
-                                        OnTestModuleLeft?.Invoke(this, new TestModuleEventArgs() { TestModule = CurrentTestModule, TestSuite = GetCurrentSuiteStack(), TestCase = CurrentTestCase, TestExecInfoType = TestExecInfoType.Leaving });
-                                        CurrentContextStringBuilder.Clear();
-                                        CurrentTestModule = string.Empty;
-                                        break;
-                                    case TestExecInfoType.Skipping:
-                                        CurrentTestCaseFailed = false;
-                                        OnTestModuleSkipped?.Invoke(this, new TestModuleEventArgs() { TestModule = CurrentTestModule, TestSuite = GetCurrentSuiteStack(), TestCase = CurrentTestCase, TestExecInfoType = TestExecInfoType.Skipping, TestInfo = "Module disabled" });
-                                        break;
-                                }
-                                break;
-
-                            case "suite":
-                                switch (testLineInfo.TestExecInfoType)
-                                {
-                                    case TestExecInfoType.Entering:
-                                        testSuiteStack.Push(testLineInfo.TestName);
-                                        CurrentTestSuite = testLineInfo.TestName;
-                                        CurrentContextStringBuilder.Clear();
-                                        OnTestSuiteEntered?.Invoke(this, new TestModuleEventArgs() { TestModule = CurrentTestModule, TestSuite = GetCurrentSuiteStack(), TestCase = CurrentTestCase, TestExecInfoType = TestExecInfoType.Entering });
-                                        break;
-                                    case TestExecInfoType.Leaving:
-                                        OnTestSuiteLeft?.Invoke(this, new TestModuleEventArgs() { TestModule = CurrentTestModule, TestSuite = GetCurrentSuiteStack(), TestCase = CurrentTestCase, TestExecInfoType = TestExecInfoType.Leaving });
-                                        if (testSuiteStack.Count > 0)
-                                        {
-                                            CurrentTestSuite = testSuiteStack.Pop();
-                                        }
-                                        else
-                                        {
-                                            //uh, can't pop over root
+                            switch (testLineInfo.TestType)
+                            {
+                                case "module":
+                                    switch (testLineInfo.TestExecInfoType)
+                                    {
+                                        case TestExecInfoType.Entering:
+                                            CurrentTestModule = testLineInfo.TestName;
+                                            CurrentTestCaseFailed = false;
+                                            CurrentContextStringBuilder.Clear();
+                                            OnTestModuleEntered?.Invoke(this, new TestModuleEventArgs() { TestModule = CurrentTestModule, TestSuite = CurrentTestSuite, TestCase = CurrentTestCase, TestExecInfoType = TestExecInfoType.Entering, DataDrivenTestCaseIndex = testLineInfo.DataDrivenTestCaseIndex });
+                                            break;
+                                        case TestExecInfoType.Leaving:
                                             CurrentTestSuite = string.Empty;
-                                        }
-                                        CurrentTestCase = string.Empty;
-                                        CurrentTestCaseFailed = false;
-                                        CurrentContextStringBuilder.Clear();
-                                        break;
-                                    case TestExecInfoType.Skipping:
-                                        OnTestSuiteSkipped?.Invoke(this, new TestModuleEventArgs() { TestModule = CurrentTestModule, TestSuite = Path.Combine(GetCurrentSuiteStack(), testLineInfo.TestName), TestCase = CurrentTestCase, TestExecInfoType = TestExecInfoType.Skipping, TestInfo = "Suite disabled" });
-                                        break;
-                                }
-                                break;
+                                            CurrentTestCase = string.Empty;
+                                            OnTestModuleLeft?.Invoke(this, new TestModuleEventArgs() { TestModule = CurrentTestModule, TestSuite = CurrentTestSuite, TestCase = CurrentTestCase, TestExecInfoType = TestExecInfoType.Leaving, DataDrivenTestCaseIndex = testLineInfo.DataDrivenTestCaseIndex });
+                                            CurrentContextStringBuilder.Clear();
+                                            CurrentTestModule = string.Empty;
+                                            break;
+                                        case TestExecInfoType.Skipping:
+                                            CurrentTestCaseFailed = false;
+                                            OnTestModuleSkipped?.Invoke(this, new TestModuleEventArgs() { TestModule = CurrentTestModule, TestSuite = CurrentTestSuite, TestCase = CurrentTestCase, TestExecInfoType = TestExecInfoType.Skipping, TestInfo = "Module disabled", DataDrivenTestCaseIndex = testLineInfo.DataDrivenTestCaseIndex });
+                                            break;
+                                    }
+                                    break;
 
-                            case "case":
-                                switch (testLineInfo.TestExecInfoType)
-                                {
-                                    case TestExecInfoType.Entering:
-                                        CurrentContextStringBuilder.Clear();
-                                        CurrentTestCase = testLineInfo.TestName;
-                                        CurrentTestCaseFailed = false;
-                                        OnTestCaseEntered?.Invoke(this, new TestModuleEventArgs() { TestModule = CurrentTestModule, TestSuite = GetCurrentSuiteStack(), TestCase = CurrentTestCase, TestExecInfoType = TestExecInfoType.Entering });
-                                        break;
-                                    case TestExecInfoType.Leaving:
-                                        OnTestCaseLeft?.Invoke(this, new TestModuleEventArgs() { TestModule = CurrentTestModule, TestSuite = GetCurrentSuiteStack(), TestCase = CurrentTestCase, TestExecInfoType = CurrentTestCaseFailed ? TestExecInfoType.Error : TestExecInfoType.Leaving, TestInfo = CurrentContextStringBuilder.ToString() });
-                                        CurrentTestCase = string.Empty;
-                                        CurrentContextStringBuilder.Clear();
-                                        CurrentTestCaseFailed = false;
-                                        break;
-                                    case TestExecInfoType.Skipping:
-                                        OnTestCaseSkipped?.Invoke(this, new TestModuleEventArgs() { TestModule = CurrentTestModule, TestSuite = GetCurrentSuiteStack(), TestCase = testLineInfo.TestName, TestExecInfoType = TestExecInfoType.Skipping, TestInfo = "Testcase was skipped" });
-                                        break;
-                                    case TestExecInfoType.Error:
-                                        CurrentTestCaseFailed = true;
-                                        break;
-                                }
-                                break;
+                                case "suite":
+                                    switch (testLineInfo.TestExecInfoType)
+                                    {
+                                        case TestExecInfoType.Entering:
+                                            testSuiteStack.Push(testLineInfo.TestName);
+                                            CurrentTestSuite = testLineInfo.TestName;
+                                            CurrentContextStringBuilder.Clear();
+                                            OnTestSuiteEntered?.Invoke(this, new TestModuleEventArgs() { TestModule = CurrentTestModule, TestSuite = CurrentTestSuite, TestCase = CurrentTestCase, TestExecInfoType = TestExecInfoType.Entering, DataDrivenTestCaseIndex = testLineInfo.DataDrivenTestCaseIndex });
+                                            break;
+                                        case TestExecInfoType.Leaving:
+                                            OnTestSuiteLeft?.Invoke(this, new TestModuleEventArgs() { TestModule = CurrentTestModule, TestSuite = CurrentTestSuite, TestCase = CurrentTestCase, TestExecInfoType = TestExecInfoType.Leaving, DataDrivenTestCaseIndex = testLineInfo.DataDrivenTestCaseIndex });
+                                            if (testSuiteStack.Count > 0)
+                                            {
+                                                testSuiteStack.Pop();
+                                                CurrentTestSuite = testSuiteStack.Peek();
+                                            }
+                                            else
+                                            {
+                                                //uh, can't pop over root
+                                                CurrentTestSuite = string.Empty;
+                                            }
+                                            CurrentTestCase = string.Empty;
+                                            CurrentTestCaseFailed = false;
+                                            CurrentContextStringBuilder.Clear();
+                                            break;
+                                        case TestExecInfoType.Skipping:
+                                            OnTestSuiteSkipped?.Invoke(this, new TestModuleEventArgs() { TestModule = CurrentTestModule, TestSuite = testLineInfo.TestName, TestCase = CurrentTestCase, TestExecInfoType = TestExecInfoType.Skipping, TestInfo = "Suite disabled", DataDrivenTestCaseIndex = testLineInfo.DataDrivenTestCaseIndex });
+                                            break;
+                                    }
+                                    break;
 
-                            default:
-                                //unknown testType
-                                break;
+                                case "case":
+                                    switch (testLineInfo.TestExecInfoType)
+                                    {
+                                        case TestExecInfoType.Entering:
+                                            //Hack TestCase and TestSuite for DataDriven testcases
+                                            if (testLineInfo.DataDrivenTestCaseIndex >= 0)
+                                            {
+                                                CurrentTestCase = testSuiteStack.Peek();
+                                                var testSuites = testSuiteStack.ToList();
+                                                CurrentTestSuite = testSuites[testSuites.Count - 2];
+                                            }
+                                            else
+                                            {
+                                                CurrentContextStringBuilder.Clear();
+                                                CurrentTestCaseFailed = false;
+                                                CurrentTestCase = testLineInfo.TestName;
+                                            }
+                                            OnTestCaseEntered?.Invoke(this, new TestModuleEventArgs() { TestModule = CurrentTestModule, TestSuite = CurrentTestSuite, TestCase = CurrentTestCase, TestExecInfoType = TestExecInfoType.Entering });
+                                            break;
+                                        case TestExecInfoType.Leaving:
+                                            //Hack TestCase and TestSuite for DataDriven testcases
+                                            if (testLineInfo.DataDrivenTestCaseIndex >= 0)
+                                            {
+                                                CurrentTestCase = testSuiteStack.Peek();
+                                                var testSuites = testSuiteStack.ToList();
+                                                CurrentTestSuite = testSuites[testSuites.Count - 2];
+                                            }
+                                            else
+                                            {
+                                                CurrentTestCase = testLineInfo.TestName;
+                                            }
+                                            OnTestCaseLeft?.Invoke(this, new TestModuleEventArgs() { TestModule = CurrentTestModule, TestSuite = CurrentTestSuite, TestCase = CurrentTestCase, TestExecInfoType = CurrentTestCaseFailed ? TestExecInfoType.Error : TestExecInfoType.Leaving, TestInfo = CurrentContextStringBuilder.ToString(), DataDrivenTestCaseIndex = testLineInfo.DataDrivenTestCaseIndex });
+                                            if (testLineInfo.DataDrivenTestCaseIndex < 0)
+                                            {
+                                                CurrentTestCase = string.Empty;
+                                                CurrentContextStringBuilder.Clear();
+                                                CurrentTestCaseFailed = false;
+                                            }
+                                            break;
+                                        case TestExecInfoType.Skipping:
+                                            OnTestCaseSkipped?.Invoke(this, new TestModuleEventArgs() { TestModule = CurrentTestModule, TestSuite = CurrentTestSuite, TestCase = testLineInfo.TestName, TestExecInfoType = TestExecInfoType.Skipping, TestInfo = "Testcase was skipped", DataDrivenTestCaseIndex = testLineInfo.DataDrivenTestCaseIndex });
+                                            break;
+                                        case TestExecInfoType.Error:
+                                            CurrentTestCaseFailed = true;
+                                            break;
+                                    }
+                                    break;
+
+                                default:
+                                    //unknown testType
+                                    break;
+                            }
                         }
                     }
                 }
@@ -187,20 +230,21 @@ namespace TestExecWin
             TestExecInfo testLineInfo = null;
             string testType = null;
             string testName = null;
+            int dataDrivenTestCaseIndex = 0;
 
-            if (ParseTestLineInfo(line, "Entering test ", out testType, out testName))
+            if (ParseTestLineInfo(line, "Entering test ", out testType, out testName, out dataDrivenTestCaseIndex))
             {
-                testLineInfo = new TestExecInfo() { TestType = testType, TestName = testName, TestExecInfoType = TestExecInfoType.Entering };
+                testLineInfo = new TestExecInfo() { TestType = testType, TestName = testName, TestExecInfoType = TestExecInfoType.Entering, DataDrivenTestCaseIndex = dataDrivenTestCaseIndex };
             }
-            else if (ParseTestLineInfo(line, "Leaving test ", out testType, out testName))
+            else if (ParseTestLineInfo(line, "Leaving test ", out testType, out testName, out dataDrivenTestCaseIndex))
             {
-                testLineInfo = new TestExecInfo() { TestType = testType, TestName = testName, TestExecInfoType = TestExecInfoType.Leaving };
+                testLineInfo = new TestExecInfo() { TestType = testType, TestName = testName, TestExecInfoType = TestExecInfoType.Leaving, DataDrivenTestCaseIndex = dataDrivenTestCaseIndex };
             }
             else if (line.Contains(" is skipped "))
             {
-                if (ParseTestLineInfo(line, ": Test ", out testType, out testName))
+                if (ParseTestLineInfo(line, ": Test ", out testType, out testName, out dataDrivenTestCaseIndex))
                 {
-                    testLineInfo = new TestExecInfo() { TestType = testType, TestName = testName, TestExecInfoType = TestExecInfoType.Skipping };
+                    testLineInfo = new TestExecInfo() { TestType = testType, TestName = testName, TestExecInfoType = TestExecInfoType.Skipping, DataDrivenTestCaseIndex = dataDrivenTestCaseIndex };
                 }
                 else
                 {
@@ -216,10 +260,11 @@ namespace TestExecWin
             return testLineInfo;
         }
 
-        private bool ParseTestLineInfo(string line, string pattern, out string testType, out string testName)
+        private bool ParseTestLineInfo(string line, string pattern, out string testType, out string testName, out int dataDrivenTestCaseIndex)
         {
             testType = null;
             testName = null;
+            dataDrivenTestCaseIndex = -1;
 
             try
             {
@@ -234,6 +279,16 @@ namespace TestExecWin
                     testName = testName.Substring(0, testName.IndexOf('"'));
                     //Drop suite (group) info if present
                     testName = testName.Split('/').Last();
+
+                    //Check if case is most likely a BOOST_DATA_CASE
+                    if (testType == "case" && testName.StartsWith("_"))
+                    {
+                        if (int.TryParse(testName.Substring(1), out int dataIndex))
+                        {
+                            dataDrivenTestCaseIndex = dataIndex;
+                        }
+                    }
+
                     return true;
                 }
                 else

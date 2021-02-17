@@ -19,7 +19,7 @@ namespace TestExecWin
 	{
 		static ImageSource OkIcon = LoadImageFromResource("Ok.png");
 		static ImageSource ErrorIcon = LoadImageFromResource("Error.png");
-		static ImageSource DisabledIcon = LoadImageFromResource("Cancel.png");
+		static ImageSource DisabledIcon = LoadImageFromResource("Cancel_bw.png");
 
 		public ObservableCollection<TreeViewItemBase> TreeViewItems { get; set; }
 		public TestResult testResult;
