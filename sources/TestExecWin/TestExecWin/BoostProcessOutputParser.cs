@@ -150,7 +150,15 @@ namespace TestExecWin
                                             if (testSuiteStack.Count > 0)
                                             {
                                                 testSuiteStack.Pop();
-                                                CurrentTestSuite = testSuiteStack.Peek();
+                                                if (testSuiteStack.Count > 0)
+                                                {
+                                                    CurrentTestSuite = testSuiteStack.Peek();
+                                                }
+                                                else
+                                                {
+                                                    //uh, can't peek over root
+                                                    CurrentTestSuite = string.Empty;
+                                                }
                                             }
                                             else
                                             {
