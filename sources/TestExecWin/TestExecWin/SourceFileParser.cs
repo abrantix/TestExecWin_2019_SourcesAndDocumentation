@@ -380,7 +380,7 @@ namespace TestExecWin
         private void GrabDefinesAndBoostNamespaces(System.IO.FileInfo in_file)
         {
             var text = RemoveCommentsFromCode(System.IO.File.ReadAllText(in_file.FullName));
-            string[] lines = text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+            string[] lines = text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
             foreach (var line in lines)
             {
                 var trimmedLine = line.Trim();
@@ -430,7 +430,7 @@ namespace TestExecWin
             var text = RemoveCommentsFromCode(System.IO.File.ReadAllText(in_file.FullName));
 
             // Read whole source file into array of strings
-            string[] lines = text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+            string[] lines = text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
             int numLines = lines.Length;
 
             // During parsing we store information about found description,

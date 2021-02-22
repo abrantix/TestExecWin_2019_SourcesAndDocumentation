@@ -14,7 +14,6 @@ C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\Tes
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\bin\Release\extension.vsixmanifest
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\bin\Release\Microsoft.VisualStudio.VCProjectEngine.dll
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\bin\Release\MultiSelectTreeView.dll
-C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Release\TestExecWin.csprojAssemblyReference.cache
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Release\TestExecWindowControl.g.cs
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Release\GeneratedInternalTypeHelper.g.cs
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Release\TestExecWin_MarkupCompile.cache
@@ -39,4 +38,4 @@ C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\Tes
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Release\extension.vsixmanifest
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Release\files.json
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Release\createTemplateManifests.cache
-C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Release\VSPackage.resources.original
+C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Release\TestExecWin.csprojAssemblyReference.cache

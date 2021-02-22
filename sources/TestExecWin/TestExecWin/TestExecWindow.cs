@@ -36,6 +36,7 @@ namespace TestExecWin
         void OnSetOutputLevel(int in_level);
         void OnTestTerminated(Result result, string in_args, bool in_memLeaksDetected, TimeSpan in_executionTime, string processOutput);
         void OnStartDebugging(string in_cmdLineParams);
+        System.Threading.Tasks.Task OnStartRunTestsAsync();
         void OnOpenProtocolFile();
         void OnOpenSourceFile(string in_fullFileName, int in_lineNum);
         void OnTestSuiteStart(string name);
@@ -429,6 +430,11 @@ namespace TestExecWin
         void IMainEvents.OnTestCaseSkipped(string suite, string name)
         {
             Gui().SetTestCaseResult(suite, name, Result.Disabled, "Test case disabled");
+        }
+        
+        async System.Threading.Tasks.Task IMainEvents.OnStartRunTestsAsync()
+        {
+            await m_vsConnector.BuildAsync(m_projectInfo);
         }
     }
 }

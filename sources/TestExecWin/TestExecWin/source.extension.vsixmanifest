@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="TestExecWin.Gerald Fahrnholz.be4e6c2f-4416-4490-8f35-ee61436e9105" Version="2019.6.5" Language="en-US" Publisher="Gerald Fahrnholz" />
-        <DisplayName>TestExecWindow for BOOST</DisplayName>
+        <Identity Id="TestExecWin.Gerald Fahrnholz.be4e6c2f-4416-4490-8f35-ee61436e9105" Version="2019.7.0.3" Language="en-US" Publisher="Abrantix - original Gerald Fahrnholz)" />
+        <DisplayName>TestExecWindow for BOOST (Abrantix Mod)</DisplayName>
         <Description xml:space="preserve">Displays all test cases available within the current C++ startup project,  supports execution and debugging of selected test cases.</Description>
         <MoreInfo>http://www.gerald-fahrnholz.eu/sw/online_doc_testexecwin/generated/index.html</MoreInfo>
         <License>Resources\license_gpl.txt</License>

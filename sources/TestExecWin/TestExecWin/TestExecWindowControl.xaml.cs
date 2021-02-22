@@ -30,6 +30,7 @@ namespace TestExecWin
     using System.Windows.Input;
     using System.ComponentModel;
     using System.Windows.Data;
+    using System.Threading.Tasks;
 
     class MyListItem
     {
@@ -288,7 +289,7 @@ namespace TestExecWin
         [SuppressMessage("Microsoft.Globalization", "CA1300:SpecifyMessageBoxOptions", Justification = "Sample code")]
         [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1300:ElementMustBeginWithUpperCaseLetter", Justification = "Default event handler naming pattern")]
 
-        private void RunSelectedTestFunctions()
+        private async Task RunSelectedTestFunctions()
         {
             for (int i = 0; i < 4; ++i)
             {
@@ -298,6 +299,8 @@ namespace TestExecWin
                 m_numExecutedTests[i] = 0;
                 m_totalNumTestsToExecute[i] = 0;
             }
+
+            await m_mainEvents.OnStartRunTestsAsync();
 
             var fctList = new List<TestFunctionTreeViewItem>();
             foreach (var selectedItem in testTreeView.SelectedItems)
@@ -330,7 +333,7 @@ namespace TestExecWin
             }
         }
 
-        private void btnRunSelectedTestFunc_Click(object sender, RoutedEventArgs e)
+        private async void btnRunSelectedTestFunc_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -340,7 +343,7 @@ namespace TestExecWin
                 }
                 else
                 {
-                    RunSelectedTestFunctions();
+                   await RunSelectedTestFunctions();
                 }
             }
             catch (Exception ex)
@@ -349,17 +352,17 @@ namespace TestExecWin
             }
         }
 
-        private void btnRunAllTestFuncs_Click(object sender, RoutedEventArgs e)
+        private async void btnRunAllTestFuncs_Click(object sender, RoutedEventArgs e)
         {
-            RunAllTests(false);
+            await RunAllTests(false);
         }
 
-        private void btnDebugAllTestFuncs_Click(object sender, RoutedEventArgs e)
+        private async void btnDebugAllTestFuncs_Click(object sender, RoutedEventArgs e)
         {
-            RunAllTests(true);
+            await RunAllTests(true);
         }
 
-        private void RunAllTests(bool debug)
+        private async Task RunAllTests(bool debug)
         {
             try
             {
@@ -390,7 +393,7 @@ namespace TestExecWin
                         });
 
                         InitForTestExecution(RunMode.TEST_ALL, rootTestTreeViewItem.OverallTestFunctionCount);
-                        StartAllTests(debug);
+                        await StartAllTests(debug);
                     }
                 }
             }
@@ -603,7 +606,7 @@ namespace TestExecWin
             }
         }
 
-        private void StartAllTests(bool debug)
+        private async Task StartAllTests(bool debug)
         {
             string args = cbxDefaultArgs.Text;
             if (!args.Contains("--log_level"))
@@ -616,8 +619,10 @@ namespace TestExecWin
             }
             else
             {
+                m_mainEvents.OnRefreshNow();
                 m_state[(int)m_curRunMode] = State.RUNNING;
                 RefreshState();
+                await m_mainEvents.OnStartRunTestsAsync();
                 StartProcess(m_projectInfo.GetExePath(), args, m_projectInfo.SelectedProject.TargetDirPath, true);
             }
         }
@@ -1073,9 +1078,9 @@ namespace TestExecWin
             }
         }
 
-        private void RunContextMenuItem_Click(object sender, RoutedEventArgs e)
+        private async void RunContextMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            RunSelectedTestFunctions();
+            await RunSelectedTestFunctions();
         }
 
         private void ShowSourceCodeFile(string file, int line)

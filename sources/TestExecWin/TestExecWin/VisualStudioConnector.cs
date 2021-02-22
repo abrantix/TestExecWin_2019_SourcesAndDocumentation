@@ -26,6 +26,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio;
 using EnvDTE80;
 using System.IO;
+using System.Threading;
 
 namespace TestExecWin
 {
@@ -46,12 +47,14 @@ namespace TestExecWin
         private uint m_updateSolutionEventsCookie = 0;
 
         private IMainEvents m_mainEvents;
-        private IEventReceiver m_evenReceiver;
+        private IEventReceiver m_eventReceiver;
+
+        private ManualResetEvent m_buildCompletedEvent = new ManualResetEvent(false);
 
         public VisualStudioConnector(IMainEvents in_mainEvents, IEventReceiver in_eventReceiver)
         {
             m_mainEvents = in_mainEvents;
-            m_evenReceiver = in_eventReceiver;
+            m_eventReceiver = in_eventReceiver;
             ConnectWithVisualStudio();
         }
 
@@ -268,6 +271,39 @@ namespace TestExecWin
                 WriteLine(1, "ReadSettingsOfAllProjects-End: EXCEPTION: " + ex.ToString());
             }
             return projectInfo;
+        }
+
+        public async Task BuildAsync(ProjectInfo projectInfo)
+        {
+            try
+            {
+                if (projectInfo.SelectedProject != null)
+                {
+                    string configName = dte.Solution.SolutionBuild.ActiveConfiguration.Name;
+                    Microsoft.VisualStudio.VCProjectEngine.VCProject vcProj =
+                        (Microsoft.VisualStudio.VCProjectEngine.VCProject)projectInfo.SelectedProject.DTEProject.Object;
+                    Microsoft.VisualStudio.VCProjectEngine.IVCCollection configs =
+                        (Microsoft.VisualStudio.VCProjectEngine.IVCCollection)vcProj.Configurations;
+                    Microsoft.VisualStudio.VCProjectEngine.VCConfiguration config =
+                        FindConfig(configs, configName);
+                    var solutionName = Path.GetFileNameWithoutExtension(dte.Solution.FileName);
+
+                    dte.ToolWindows.SolutionExplorer.GetItem($"{solutionName}\\{projectInfo.SelectedProject.DTEProject.Name}").Select(EnvDTE.vsUISelectionType.vsUISelectionTypeSelect);
+                    m_buildCompletedEvent.Reset();
+                    dte.Events.BuildEvents.OnBuildDone += BuildEvents_OnBuildDone;
+                    dte.ExecuteCommand("ClassViewContextMenus.ClassViewProject.Build");
+                    await Task.Run(() => m_buildCompletedEvent.WaitOne());
+                }
+            }
+            catch (Exception ex)
+            {
+                WriteLine(1, "Could not start debugging\nEXCEPTION: " + ex.ToString());
+            }
+        }
+
+        private void BuildEvents_OnBuildDone(EnvDTE.vsBuildScope Scope, EnvDTE.vsBuildAction Action)
+        {
+            m_buildCompletedEvent.Set();
         }
 
         /// [start debugging]
@@ -651,7 +687,7 @@ namespace TestExecWin
 
         private void WriteLine(int in_outputLevel, String in_info)
         {
-            m_evenReceiver.WriteLine(in_outputLevel, in_info);
+            m_eventReceiver.WriteLine(in_outputLevel, in_info);
         }
 
         /// [find config]
