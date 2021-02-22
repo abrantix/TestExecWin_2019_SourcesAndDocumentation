@@ -126,11 +126,13 @@ namespace TestExecWin
         {
             WriteLine(3, "ScanProjectDir-Begin");
 
-            // Recursively scan for .cpp files in project dir and all sub directories
+            // Recursively scan for .cpp files in project dir and all sub directories of project
             System.IO.DirectoryInfo dir = new System.IO.DirectoryInfo(project.SourceDirPath);
-            var files = dir.GetFiles("*.cpp", System.IO.SearchOption.AllDirectories).Union(dir.GetFiles("*.h", System.IO.SearchOption.AllDirectories));
+            var files = dir.GetFiles("*.cpp", System.IO.SearchOption.AllDirectories)
+                            .Union(dir.GetFiles("*.h", System.IO.SearchOption.AllDirectories))
+                            .Union(project.ProjectFiles.Where(x => x.Extension == ".cpp" || x.Extension == ".h" ));
 
-            //flaky search for boost namespace (we try to catch *boost::unit_test::disabled() tests)
+                //flaky search for boost namespace (we try to catch *boost::unit_test::disabled() tests)
             boostNameSpaces.Clear();
             foreach (var file in files)
             {

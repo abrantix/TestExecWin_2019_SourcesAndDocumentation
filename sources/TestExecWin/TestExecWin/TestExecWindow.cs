@@ -150,6 +150,7 @@ namespace TestExecWin
         public string TargetDirPath { get; set; }
         public bool IsStartupProject { get; set; }
         public AppType AppType { get; set; }
+        public FileInfo[] ProjectFiles { get; set; }
         public NodeList<TestGroupEntry> TestGroups { get; private set; }
 
         public Project()

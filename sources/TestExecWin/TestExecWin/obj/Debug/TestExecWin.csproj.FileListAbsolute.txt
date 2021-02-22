@@ -28,7 +28,6 @@ C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\Tes
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Debug\VSCT.write.1.tlog
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Debug\resources.json
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Debug\ctoFiles.json
-C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Debug\VSPackage.resources.original
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Debug\mergeCto.cache
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Debug\TestExecWin.csproj.CoreCompileInputs.cache
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Debug\TestExecWin.csproj.CopyComplete
@@ -39,3 +38,4 @@ C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\Tes
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Debug\extension.vsixmanifest
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Debug\files.json
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Debug\createTemplateManifests.cache
+C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Debug\TestExecWin.csprojAssemblyReference.cache

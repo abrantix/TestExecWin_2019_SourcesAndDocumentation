@@ -39,3 +39,4 @@ C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\Tes
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Release\extension.vsixmanifest
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Release\files.json
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Release\createTemplateManifests.cache
+C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\TestExecWin\obj\Release\VSPackage.resources.original

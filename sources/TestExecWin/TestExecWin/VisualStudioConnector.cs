@@ -163,14 +163,28 @@ namespace TestExecWin
 
                 /// [get startup project]
                 // Perform recursive search for the startup project through all solution filters:
-                EnvDTE.Project[] projects = GetAllProjects();
+                EnvDTE.Project[] projects = GetAllProjects(false);
                 /// [get startup project]
 
+                //iterate through main projects
                 foreach (var dteProject in projects)
                 {
                     var project = new Project();
                     project.DTEProject = dteProject;
                     project.ProjectName = dteProject.Name;
+
+                    var projectFiles = new List<FileInfo>();
+
+                    foreach (EnvDTE.ProjectItem fileItem in GetAllProjectItemsFromKind(project.DTEProject, EnvDTE.Constants.vsProjectItemKindPhysicalFile))
+                    {
+                        for (short i = 0; i < fileItem.FileCount; i++)
+                        {
+                            var fileInfo = new FileInfo(fileItem.FileNames[i]);
+                            projectFiles.Add(fileInfo);
+                        }
+                    }
+                    project.ProjectFiles = projectFiles.Distinct().ToArray();
+
                     try
                     {
                         project.SourceDirPath = System.IO.Path.GetDirectoryName(dteProject.FullName);
@@ -254,201 +268,6 @@ namespace TestExecWin
                 WriteLine(1, "ReadSettingsOfAllProjects-End: EXCEPTION: " + ex.ToString());
             }
             return projectInfo;
-        }
-
-
-        /// Read all relevant project settings
-        public bool ReadSettingsOfStartupProject(ProjectInfo projectInfo)
-        {
-            WriteLine(3, "ReadSettingsOfStartupProject-Begin");
-            try
-            {
-                if (dte == null)
-                {
-                    WriteLine(1, "dte is null (checking for startup project is not possible)");
-                    return false;
-                }
-                if (dte.Solution == null)
-                {
-                    WriteLine(1, "dte.Solution is null (checking for startup project is not possible)");
-                    return false;
-                }
-                if (dte.Solution.SolutionBuild == null)
-                {
-                    WriteLine(1, "dte.Solution.SolutionBuild is null (checking for startup project is not possible)");
-                    return false;
-                }
-                if (dte.Solution.SolutionBuild.ActiveConfiguration == null)
-                {
-                    WriteLine(1, "dte.Solution.SolutionBuild.ActiveConfiguration is null (checking for startup project is not possible)");
-                    return false;
-                }
-
-                projectInfo.solutionFullPath = dte.Solution.FileName;
-
-                /// [get config name]
-                //Get name of config (e.g. "Debug", "Release"
-                string configName = dte.Solution.SolutionBuild.ActiveConfiguration.Name;
-                /// [get config name]
-
-                /// [get name startup project]
-                EnvDTE80.SolutionBuild2 sb = (EnvDTE80.SolutionBuild2)dte.Solution.SolutionBuild;
-                if (sb == null)
-                {
-                    WriteLine(1, "SolutionBuild is null (checking for startup project is not possible)");
-                    return false;
-                }
-
-                // sb.StartupProjects is an array of project file names. Usually we expect
-                // only a single project name within the array.
-                // Name is of the format "..\Test\TestRunner\TestRunner.vcxproj"
-                if (sb.StartupProjects == null)
-                {
-                    WriteLine(2, "ReadSettingsOfStartupProject-End: StartupProjects not available");
-                    return false;
-                }
-
-                string nameStartupProject = GetStartupProjectName(sb);
-
-                string msg = "";
-
-                /// [get startup project]
-                // Perform recursive search for the startup project through all solution filters:
-                EnvDTE.Project startupProj = FindProject(nameStartupProject);
-                /// [get startup project]
-                if (startupProj == null)
-                {
-                    WriteLine(1, "No startup project found");
-                    WriteLine(3, "ReadSettingsOfStartupProject-End: no startup project found");
-                    return false;
-                }
-
-                var project = new Project();
-
-                project.ProjectName = startupProj.Name;
-                project.IsStartupProject = true;
-                project.DTEProject = startupProj;
-                projectInfo.config = configName;
-                project.SourceDirPath = System.IO.Path.GetDirectoryName(startupProj.FullName);
-                WriteLine(2, "ReadSettingsOfStartupProject: project=" + project.ProjectName + " - " + projectInfo.config);
-                WriteLine(2, "ReadSettingsOfStartupProject: projectPath=" + project.SourceDirPath);
-
-                EnvDTE.ConfigurationManager cm = startupProj.ConfigurationManager;
-                if (cm == null)
-                {
-                    WriteLine(1, "No ConfigurationManager found");
-                    WriteLine(3, "ReadSettingsOfStartupProject-End: no ConfigurationManager found");
-                    return false;
-                }
-                if (cm.ActiveConfiguration == null)
-                {
-                    WriteLine(1, "No ActiveConfiguration found");
-                    WriteLine(3, "ReadSettingsOfStartupProject-End: no ActiveConfiguration found");
-                    return false;
-                }
-                msg = "Platform=" + cm.ActiveConfiguration.PlatformName;
-                WriteLine(2, msg);
-
-                EnvDTE.Properties props = cm.ActiveConfiguration.Properties;
-                if (props != null)
-                {
-                    WriteLine(2, "Now iterating over ActiveConfiguration.Properties...");
-
-                    // Scan properties of ActiveConfiguration to be used for future extended requests
-                    msg = "ReadSettingsOfStartupProject: ActiveConfiguration.Properties";
-                    foreach (EnvDTE.Property p in props)
-                    {
-                        msg += "  " + p.Name;
-                    }
-                    WriteLine(2, msg);
-                }
-                //projectInfo.targetDirPath = startupProj.ConfigurationManager.ActiveConfiguration.Properties.Item("OutputPath").Value.ToString();
-                //msg = "ReadSettingsOfStartupProject: OutputPath=" + projectInfo.targetDirPath;
-                //WriteLine(2, msg);
-
-                /// [get exe path]
-                // Get full path of executable depending on found
-                // startup project and configuration (Debug/Release)
-                Microsoft.VisualStudio.VCProjectEngine.VCProject vcProj =
-                    (Microsoft.VisualStudio.VCProjectEngine.VCProject)startupProj.Object;
-                Microsoft.VisualStudio.VCProjectEngine.IVCCollection configs =
-                    (Microsoft.VisualStudio.VCProjectEngine.IVCCollection)vcProj.Configurations;
-                Microsoft.VisualStudio.VCProjectEngine.VCConfiguration config =
-                    FindConfig(configs, configName);
-                if (config == null)
-                {
-                    WriteLine(1, "Config " + configName + " not found");
-                    return false;
-                }
-                msg = "PrimaryOutput (FullExePath)=" + config.PrimaryOutput;
-                WriteLine(2, msg);
-                /// [get exe path]
-                project.FullExePath = config.PrimaryOutput;
-                string delimiter = "/\\";
-                int posPathEnd = project.FullExePath.LastIndexOfAny(delimiter.ToCharArray());
-                if (posPathEnd > 0)
-                {
-                    project.TargetDirPath = project.FullExePath.Substring(0, posPathEnd);
-                }
-                msg = "ReadSettingsOfStartupProject: OutputPath=" + project.TargetDirPath;
-                WriteLine(2, msg);
-
-                // Scan properties to be used for future extended requests
-                msg = "ReadSettingsOfStartupProject: startupProj.Properties";
-                foreach (EnvDTE.Property p in startupProj.Properties)
-                {
-                    msg += "  " + p.Name;
-                }
-                WriteLine(3, msg);
-                //msg = "ReadSettingsOfStartupProject: ActiveConfiguration.Properties";
-                //foreach (EnvDTE.Property p in startupProj.ConfigurationManager.ActiveConfiguration.Properties)
-                //{
-                //    msg += "  " + p.Name;
-                //}
-                //WriteLine(3, msg);
-
-                //msg = "CommandArguments=";
-                //msg += startupProj.ConfigurationManager.ActiveConfiguration.Properties.Item("CommandArguments").Value.ToString();
-                //WriteLine(3, msg);
-                projectInfo.AddProject(project);
-                WriteLine(3, "ReadSettingsOfStartupProject-End");
-            }
-            catch (Exception ex)
-            {
-                WriteLine(1, "ReadSettingsOfStartupProject-End: EXCEPTION: " + ex.ToString());
-                return false;
-            }
-            return true;
-        }
-
-        private string GetStartupProjectName(SolutionBuild2 sb)
-        {
-            string msg = string.Empty;
-            foreach (String item in (Array)sb.StartupProjects)
-            {
-                msg += item;
-            }
-            WriteLine(3, "startupProjects=" + msg);
-
-            // for further processing extract the name without path and extension
-            // e.g. nameStartupProject = "TestRunner"
-            // (extraction code not shown here)
-            /// [get name startup project]
-
-            int posLast = msg.LastIndexOf(".");
-            if (posLast >= 0)
-            {
-                msg = msg.Substring(0, posLast);
-            }
-            WriteLine(3, "startupProjects=" + msg);
-            int posFirst = msg.LastIndexOf("\\");
-            if (posFirst >= 0)
-            {
-                msg = msg.Substring(posFirst + 1);
-            }
-            String nameStartupProject = msg;
-            WriteLine(3, "nameStartupProject=" + nameStartupProject);
-            return nameStartupProject;
         }
 
         /// [start debugging]
@@ -690,7 +509,7 @@ namespace TestExecWin
         // -----  Private methods  -----
 
         /// Find a project with a given name within the hierarchical tree of project/solution items
-        private EnvDTE.Project[] GetAllProjects()
+        private EnvDTE.Project[] GetAllProjects(bool recursive)
         {
             var projects = new List<EnvDTE.Project>();
             /// [iterate dte projects]
@@ -702,7 +521,10 @@ namespace TestExecWin
                     WriteLine(3, "GetAllProjects: " + project.Name);
                     if (project.Kind == EnvDTE.Constants.vsProjectKindSolutionItems)
                     {
-                        projects.AddRange(GetProjectsRecursive(project));
+                        if (recursive)
+                        {
+                            projects.AddRange(GetProjectsRecursive(project));
+                        }
                     }
                     else
                     {
@@ -714,31 +536,45 @@ namespace TestExecWin
         }
 
 
-        /// Find a project with a given name within the hierarchical tree of project/solution items
-        private EnvDTE.Project FindProject(string nameProject)
+        private EnvDTE.ProjectItem[] GetAllProjectItemsFromKind(EnvDTE.Project project, string guid)
         {
-            /// [iterate dte projects]
-            foreach (EnvDTE.Project project in dte.Solution.Projects)
-            /// [iterate dte projects]
+            List<EnvDTE.ProjectItem> projectItems = new List<EnvDTE.ProjectItem>();
+            foreach (EnvDTE.ProjectItem childProjectItem in project.ProjectItems)
             {
-                if (project != null)
+                if (childProjectItem.Kind == guid)
                 {
-                    WriteLine(3, "FindProject: " + project.Name);
-                    if (project.Kind == EnvDTE.Constants.vsProjectKindSolutionItems)
-                    {
-                        EnvDTE.Project projectNextLevel = FindProjectRecursive(project, nameProject);
-                        if (projectNextLevel != null)
-                        {
-                            return projectNextLevel;
-                        }
-                    }
-                    else if (project.Name == nameProject)
-                    {
-                        return project;
-                    }
+                    projectItems.Add(childProjectItem);
+                    //recursive call
+                }
+                projectItems.AddRange(GetAllProjectItemsFromKind(childProjectItem, guid));
+            }
+
+            return projectItems.ToArray();
+        }
+
+        private EnvDTE.ProjectItem[] GetAllProjectItemsFromKind(EnvDTE.ProjectItem projectItem, string guid)
+        {
+            List<EnvDTE.ProjectItem> projectItems = new List<EnvDTE.ProjectItem>();
+
+            if (projectItem.Kind == guid)
+            {
+                projectItems.Add(projectItem);
+            }
+
+            foreach (EnvDTE.ProjectItem childProjectitem in projectItem.ProjectItems)
+            {
+                if (childProjectitem.Kind == guid)
+                {
+                    projectItems.Add(childProjectitem);
+                }
+                else
+                {
+                    //recursive call
+                    projectItems.AddRange(GetAllProjectItemsFromKind(childProjectitem, guid));
                 }
             }
-            return null;
+
+            return projectItems.ToArray();
         }
 
         /// Find a project with a given name within the project items of a given project
