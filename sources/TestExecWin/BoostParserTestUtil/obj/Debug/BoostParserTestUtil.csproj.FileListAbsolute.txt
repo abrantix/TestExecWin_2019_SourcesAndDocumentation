@@ -14,6 +14,7 @@ C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\Tes
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\BoostParserTestUtil\bin\Debug\EnvDTE.dll
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\BoostParserTestUtil\bin\Debug\Microsoft.VisualStudio.Shell.15.0.dll
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\BoostParserTestUtil\bin\Debug\Microsoft.VisualStudio.Shell.Interop.dll
+C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\BoostParserTestUtil\bin\Debug\MultiSelectTreeView.dll
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\BoostParserTestUtil\bin\Debug\Microsoft.VisualStudio.Shell.Framework.dll
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\BoostParserTestUtil\bin\Debug\Microsoft.VisualStudio.Threading.dll
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\BoostParserTestUtil\bin\Debug\Microsoft.VisualStudio.VCProjectEngine.dll
@@ -61,4 +62,3 @@ C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\Tes
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\BoostParserTestUtil\obj\Debug\BoostParserTestUtil.csproj.CopyComplete
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\BoostParserTestUtil\obj\Debug\BoostParserTestUtil.exe
 C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\BoostParserTestUtil\obj\Debug\BoostParserTestUtil.pdb
-C:\Users\menti\source\repos\TestExecWin_2019_SourcesAndDocumentation\sources\TestExecWin\BoostParserTestUtil\bin\Debug\MultiSelectTreeView.dll
