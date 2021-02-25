@@ -94,7 +94,7 @@ namespace TestExecWin
         public void RemoveLastTestGroup()
         {
             //testGroups.RemoveAt(testGroups.Count-1);
-            GroupNode.GetLeaf().Child = null;
+            GroupNode.GetLeaf().Parent.Child = null;
         }
         public void RemoveAllTestGroups()
         {
