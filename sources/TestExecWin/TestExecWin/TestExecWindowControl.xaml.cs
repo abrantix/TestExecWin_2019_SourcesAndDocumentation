@@ -1044,7 +1044,7 @@ namespace TestExecWin
             {
                 if (fctCtx.TestResult != null)
                 {
-                    txtResultInfo.Text = fctCtx.TestResult.ProcessOutput;
+                    txtResultInfo.Text = fctCtx.TestResult.GetFormattedProcessOutput();
                 }
                 else
                 {
@@ -1055,7 +1055,7 @@ namespace TestExecWin
             {
                 if (ctx.TestResult != null)
                 {
-                    txtResultInfo.Text = ctx.TestResult.ProcessOutput;
+                    txtResultInfo.Text = ctx.TestResult.GetFormattedProcessOutput();
                 }
                 else
                 {

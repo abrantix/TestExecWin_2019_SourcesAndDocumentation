@@ -26,6 +26,11 @@ namespace TestExecWin
 
         public string ProcessOutput { get; set; }
 
+        public string GetFormattedProcessOutput()
+        {
+            return ProcessOutput.Replace(": ", ":\r\n\t");
+        }
+
         public TestResult()
         {
             Result = Result.Tentative;
