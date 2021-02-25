@@ -386,7 +386,7 @@ namespace TestExecWin
                         //clear test results
                         rootTestTreeViewItem.TestResult.Result = Result.Tentative;
                         rootTestTreeViewItem.TestResult.ProcessOutput = string.Empty;
-                        rootTestTreeViewItem.TreeViewItems.First().GetOverallChildItems().ToList().ForEach(x =>
+                        rootTestTreeViewItem.TreeViewItems.First().GetOverallChildItems().ForEach(x =>
                         {
                             x.TestResult.Result = Result.Tentative;
                             x.TestResult.ProcessOutput = string.Empty;
@@ -573,13 +573,14 @@ namespace TestExecWin
             {
                 TestFunctionsToExecute[m_idxRunSelectedTestFuncs].TestResult = testResult;
                 TestFunctionsToExecute[m_idxRunSelectedTestFuncs].TestResult.ProcessOutput = processOutput;
-                TestFunctionsToExecute[m_idxRunSelectedTestFuncs].TreeViewParent.ReflectTestResultsFromChilds();
+                TestFunctionsToExecute[m_idxRunSelectedTestFuncs].GetAllAncestors().ForEach(p => p.ReflectTestResultsFromChilds());
             }
             else
             {
                 //Run all
                 rootTestTreeViewItem.TreeViewItems.First().TestResult = testResult;
                 rootTestTreeViewItem.TreeViewItems.First().TestResult.ProcessOutput = processOutput;
+                rootTestTreeViewItem.TreeViewItems.First().ReflectTestResultsFromChilds();
             }
 
             bool testSucceededUpToNow = (m_numFailedTests[idx] == 0);

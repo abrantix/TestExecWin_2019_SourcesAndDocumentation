@@ -20,6 +20,7 @@ namespace TestExecWin
 		static ImageSource OkIcon = LoadImageFromResource("Ok.png");
 		static ImageSource ErrorIcon = LoadImageFromResource("Error.png");
 		static ImageSource DisabledIcon = LoadImageFromResource("Cancel_bw.png");
+		static ImageSource TentativeIcon = LoadImageFromResource("Help.png");
 
 		public ObservableCollection<TreeViewItemBase> TreeViewItems { get; set; }
 		public TestResult testResult;
@@ -69,26 +70,27 @@ namespace TestExecWin
 		public void ReflectTestResultsFromChilds()
 		{
 			var testFunctions = GetOverallTestFunctions();
-			if (testFunctions.All(x => x.TestResult.Result == Result.Success))
-			{
-				TestResult.Result = Result.Success;
-				UpdateIcon();
-			}
-			else if (testFunctions.Any(x => x.TestResult.Result == Result.Failed))
+			if (testFunctions.Any(x => x.TestResult.Result == Result.Failed))
 			{
 				TestResult.Result = Result.Failed;
-				UpdateIcon();
 			}
-			else if (testFunctions.Any(x => x.TestResult.Result == Result.Disabled))
+			else if (testFunctions.Any(x => x.TestResult.Result == Result.Tentative))
 			{
+				TestResult.Result = Result.Tentative;
+			}
+			else if (testFunctions.Any(x => x.TestResult.Result == Result.Success))
+			{
+				TestResult.Result = Result.Success;
+			}
+			else
+            {
 				TestResult.Result = Result.Disabled;
-				UpdateIcon();
 			}
 		}
 
 		public void PropagateTestResultToAllChilds()
 		{
-			GetOverallChildItems().ToList().ForEach(x => x.TestResult.Result = TestResult.Result);
+			GetOverallChildItems().ForEach(x => x.TestResult.Result = TestResult.Result);
 		}
 
 		private void UpdateIcon()
@@ -98,7 +100,7 @@ namespace TestExecWin
 				switch (testResult.Result)
 				{
 					case Result.Tentative:
-						Icon = null;
+						Icon = TentativeIcon;
 						break;
 					
 					case Result.Success:
@@ -152,14 +154,25 @@ namespace TestExecWin
 			return list.Cast<TestFunctionTreeViewItem>().ToArray();
 		}
 
-		public TreeViewItemBase[] GetOverallChildItems()
+		public List<TreeViewItemBase> GetOverallChildItems()
 		{
 			var list = new List<TreeViewItemBase>();
 			list.AddRange(TreeViewItems);
 			//recursive call for childs
 			TreeViewItems.ToList().ForEach(q => list.AddRange(q.GetOverallChildItems()));
 
-			return list.ToArray();
+			return list;
+		}
+
+		public List<TreeViewItemBase> GetAllAncestors()
+		{
+			var list = new List<TreeViewItemBase>();
+			if (TreeViewParent != null)
+            {
+				list.AddRange(TreeViewParent.GetAllAncestors());
+				list.Add(TreeViewParent);
+			}
+			return list;
 		}
 
 		public TestTreeViewItem[] GetMainTestGroups()
