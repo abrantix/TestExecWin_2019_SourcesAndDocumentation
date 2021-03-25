@@ -288,6 +288,7 @@ namespace TestExecWin
                         FindConfig(configs, configName);
                     var solutionName = Path.GetFileNameWithoutExtension(dte.Solution.FileName);
 
+                    dte.Windows.Item(EnvDTE.Constants.vsWindowKindSolutionExplorer).Activate();
                     dte.ToolWindows.SolutionExplorer.GetItem($"{solutionName}\\{projectInfo.SelectedProject.DTEProject.Name}").Select(EnvDTE.vsUISelectionType.vsUISelectionTypeSelect);
                     m_buildCompletedEvent.Reset();
                     dte.Events.BuildEvents.OnBuildDone += BuildEvents_OnBuildDone;
@@ -328,6 +329,7 @@ namespace TestExecWin
                     dbgSettings.Command = projectInfo.GetExePath();
                     var solutionName = Path.GetFileNameWithoutExtension(dte.Solution.FileName);
 
+                    dte.Windows.Item(EnvDTE.Constants.vsWindowKindSolutionExplorer).Activate();
                     dte.ToolWindows.SolutionExplorer.GetItem($"{solutionName}\\{projectInfo.SelectedProject.DTEProject.Name}").Select(EnvDTE.vsUISelectionType.vsUISelectionTypeSelect);
 
                     WriteLine(2, "StartDebugging: now starting debugger with dbgSettings.CommandArguments=" + dbgSettings.CommandArguments);
