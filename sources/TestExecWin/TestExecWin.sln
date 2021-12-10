@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoostParserTestUtil", "Boos
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestExecTestApp", "TestExecTestApp\TestExecTestApp.csproj", "{11CB1F8D-12F8-494D-9E34-CD4DCB6B70C5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestExecWin17", "..\TestExecWin17\TestExecWin17.csproj", "{2DFAE474-FCA2-4D62-A202-D21E76764A58}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestExecWin17", "TestExecWin\TestExecWin17.csproj", "{2DFAE474-FCA2-4D62-A202-D21E76764A58}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

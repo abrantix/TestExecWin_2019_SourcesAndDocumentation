@@ -49,7 +49,7 @@
     <Compile Include="TestExecWin17Package.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="source.extension.vsixmanifest">
+    <None Include="manifest17\source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
