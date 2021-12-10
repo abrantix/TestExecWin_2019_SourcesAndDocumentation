@@ -1,12 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="TestExecWin17.7adad5f9-a28f-425b-bb17-b8fe6134fd03" Version="1.0" Language="en-US" Publisher="HP Inc." />
-    <DisplayName>TestExecWin17</DisplayName>
-    <Description>Empty VSIX Project.</Description>
+        <Identity Id="TestExecWin.Gerald Fahrnholz.be4e6c2f-4416-4490-8f35-ee61436e9105" Version="2019.7.0.5" Language="en-US" Publisher="Abrantix - original Gerald Fahrnholz)" />
+        <DisplayName>TestExecWindow for BOOST (Abrantix Mod)</DisplayName>
+        <Description xml:space="preserve">Displays all test cases available within the current C++ startup project,  supports execution and debugging of selected test cases.</Description>
+        <MoreInfo>http://www.gerald-fahrnholz.eu/sw/online_doc_testexecwin/generated/index.html</MoreInfo>
+        <License>Resources\license_gpl.txt</License>
+        <GettingStartedGuide>index.html</GettingStartedGuide>
+        <Icon>Resources\TestExecWin.ico</Icon>
+        <PreviewImage>Resources\Preview.png</PreviewImage>
+        <Tags>C++, unit test, BOOST, BOOST.Test, TTB, C#, Visual Studio extension</Tags>
   </Metadata>
   <Installation>
     <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0, 18.0)">
+      <ProductArchitecture>amd64</ProductArchitecture>
+    </InstallationTarget>
+    <InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="[17.0, 18.0)">
+      <ProductArchitecture>amd64</ProductArchitecture>
+    </InstallationTarget>
+    <InstallationTarget Id="Microsoft.VisualStudio.Enterprise" Version="[17.0, 18.0)">
       <ProductArchitecture>amd64</ProductArchitecture>
     </InstallationTarget>
   </Installation>
