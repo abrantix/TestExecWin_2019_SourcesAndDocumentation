@@ -115,6 +115,8 @@ namespace TestExecWin
                     return;
                 }
 
+                Microsoft.VisualStudio.Shell.ThreadHelper.ThrowIfNotOnUIThread();
+
                 // Ensure output pane exists
                 if (m_outputPane == null)
                 {
