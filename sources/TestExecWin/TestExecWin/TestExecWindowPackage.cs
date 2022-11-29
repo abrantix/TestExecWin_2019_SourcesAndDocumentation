@@ -18,6 +18,9 @@
 //------------------------------------------------------------------------------
 
 using System;
+using Community.VisualStudio.Toolkit;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -61,7 +64,7 @@ namespace TestExecWin
     [Guid(TestExecWindowPackage.PackageGuidString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     /// [package base class]
-    public sealed class TestExecWindowPackage : AsyncPackage
+    public sealed class TestExecWindowPackage : ToolkitPackage
     /// [package base class]
     {
         /// [dte data]
@@ -86,37 +89,21 @@ namespace TestExecWin
         }
 
         /// [InitializeDTE]
-        private void InitializeDTE()
+        private async Task InitializeDTEAsync()
         {
             Debug.WriteLine("InitializeDTE-Begin");
 
             // Request access to DTE object
-            this.dte = this.GetService(typeof(Microsoft.VisualStudio.Shell.Interop.SDTE))
+            await JoinableTaskFactory.SwitchToMainThreadAsync();
+            this.dte = await this.GetServiceAsync(typeof(Microsoft.VisualStudio.Shell.Interop.SDTE))
                 as EnvDTE80.DTE2;
+            Microsoft.Assumes.Present(dte);
 
             // Pass DTE reference to static data members of other classes
             // which also need access to DTE
             Executor.dte = this.dte;
             VisualStudioConnector.dte = this.dte;
 
-            if (this.dte == null) // the IDE is not yet fully initialized
-            {
-                Debug.WriteLine("InitializeDTE: DTE is not yet fully initialized");
-
-                // Prepare for delayed initialization of DTE. The instantiated
-                // DteInitializer class will register for notifications by
-                // Visual Studio, check for full initialization of DTE and
-                // finally call the given callback (=InitializeDTE, i.e. this method)
-                // when DTE becomes available.
-                IVsShell shellService;
-                shellService = this.GetService(typeof(SVsShell)) as IVsShell;
-                this.dteInitializer = new DteInitializer(shellService, this.InitializeDTE);
-            }
-            else
-            {
-                Debug.WriteLine("InitializeDTE: DTE is set");
-                this.dteInitializer = null;
-            }
             Debug.WriteLine("InitializeDTE-End");
         }
         /// [InitializeDTE]
@@ -151,13 +138,14 @@ namespace TestExecWin
         /// <returns>A task representing the async work of package initialization, or an already completed task if there is none. Do not return null from this method.</returns>
         protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
-            await base.InitializeAsync(cancellationToken, progress);
+            await this.RegisterCommandsAsync();
+            this.RegisterToolWindows(); // => calls MyToolWindow constructor
         
             // When initialized asynchronously, the current thread may be a background thread at this point.
             // Do any initialization that requires the UI thread after switching to the UI thread.
             await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
             TestExecWindowCommand.Initialize(this);
-            InitializeDTE();
+            await InitializeDTEAsync();
             //await MentiToolWindowCommand.InitializeAsync(this);
         }
         /// [calling InitializeDTE]
