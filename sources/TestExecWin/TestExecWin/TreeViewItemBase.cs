@@ -11,6 +11,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Diagnostics;
 
 namespace TestExecWin
 {
@@ -45,27 +46,31 @@ namespace TestExecWin
 			{ return testResult; }
 			set
 			{
+				Debug.WriteLine("TestResult setter");
 				testResult = value;
 				if (testResult != null)
 				{
-                    testResult.PropertyChanged += TestResult_PropertyChanged;
-					UpdateIcon();
+                    //testResult.PropertyChanged += TestResult_PropertyChanged;
+					//UpdateIcon();
 				}
+				Debug.WriteLine("TestResult setter end");
 			}
 		}
 
         private void TestResult_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
+			Debug.WriteLine("TestResult_PropertyChanged");
 			switch (e.PropertyName)
 			{
 				case "Result":
-					UpdateIcon();
+					//UpdateIcon();
 					break;
 				
 				default:
 					break;
 			}
-        }
+			Debug.WriteLine("TestResult_PropertyChanged end");
+		}
 
 		public void ReflectTestResultsFromChilds()
 		{
@@ -95,24 +100,25 @@ namespace TestExecWin
 
 		private void UpdateIcon()
 		{
+			Debug.WriteLine("UpdateIcon");
 			if (TestResult != null)
 			{
 				switch (testResult.Result)
 				{
 					case Result.Tentative:
-						Icon = TentativeIcon;
+						//Icon = TentativeIcon;
 						break;
 					
 					case Result.Success:
-						Icon = OkIcon;
+						//Icon = OkIcon;
 						break;
 					
 					case Result.Failed:
-						Icon = ErrorIcon;
+						//Icon = ErrorIcon;
 						break;
 
 					case Result.Disabled:
-						Icon = DisabledIcon;
+						//Icon = DisabledIcon;
 						break;
 
 					default:
@@ -120,9 +126,10 @@ namespace TestExecWin
 						break;
 				}
 			}
+			Debug.WriteLine("UpdateIcon end");
 		}
 
-        public int OverallTestFunctionCount
+		public int OverallTestFunctionCount
 		{
 			get
 			{
@@ -219,20 +226,29 @@ namespace TestExecWin
 			get { return icon; }
 			set
 			{
+				Debug.WriteLine("Icon setter");
 				if (icon != value)
 				{
 					icon = value;
-					OnPropertyChanged();
+					//OnPropertyChanged();
 				}
+				Debug.WriteLine("Icon setter end");
 			}
 		}
 
 		protected void OnPropertyChanged([CallerMemberName] string name = null)
 		{
-			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+			Debug.WriteLine("OnPropertyChanged");
+			try
+			{
+				//PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+			} catch {
+				int a = 0;
+			}
+			Debug.WriteLine("OnPropertyChanged end");
 		}
 
-        private static BitmapImage LoadImageFromResource(string name)
+		private static BitmapImage LoadImageFromResource(string name)
 		{
 			string bitmapPath = $"pack://application:,,,/TestExecWin;component/Resources/{name}";
 

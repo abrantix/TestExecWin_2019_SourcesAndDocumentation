@@ -71,7 +71,7 @@ namespace TestExecWin
         private WaitMode m_waitMode = (WaitMode)Properties.Settings.Default.IdxMaxWaitTime;
 
         private TestFunctionTreeViewItem[] TestFunctionsToExecute;
-        TestTreeViewItem rootTestTreeViewItem = new TestTreeViewItem(null, new TestGroupEntry(true, string.Empty));
+        TestTreeViewItem rootTestTreeViewItem;// = new TestTreeViewItem(null, new TestGroupEntry(true, string.Empty));
 
         private static RoutedUICommand m_showSourceCommand = new RoutedUICommand("Show Shource", "ShowSource", typeof(TestExecWindowControl));
         private static RoutedUICommand m_debugCommand = new RoutedUICommand("Debug", "Debug", typeof(TestExecWindowControl));
