@@ -577,8 +577,19 @@ namespace TestExecWin
         private EnvDTE.ProjectItem[] GetAllProjectItemsFromKind(EnvDTE.Project project, string guid)
         {
             List<EnvDTE.ProjectItem> projectItems = new List<EnvDTE.ProjectItem>();
+            
+            if (project == null || project.ProjectItems == null)
+            {
+                return projectItems.ToArray();
+            }
+
             foreach (EnvDTE.ProjectItem childProjectItem in project.ProjectItems)
             {
+                if (childProjectItem == null)
+                {
+                    continue;
+                }
+
                 if (childProjectItem.Kind == guid)
                 {
                     projectItems.Add(childProjectItem);
@@ -594,21 +605,35 @@ namespace TestExecWin
         {
             List<EnvDTE.ProjectItem> projectItems = new List<EnvDTE.ProjectItem>();
 
+            if (projectItem == null)
+            {
+                return projectItems.ToArray();
+            }
+
             if (projectItem.Kind == guid)
             {
                 projectItems.Add(projectItem);
             }
 
-            foreach (EnvDTE.ProjectItem childProjectitem in projectItem.ProjectItems)
+            // Check if ProjectItems collection exists before iterating
+            if (projectItem.ProjectItems != null)
             {
-                if (childProjectitem.Kind == guid)
+                foreach (EnvDTE.ProjectItem childProjectitem in projectItem.ProjectItems)
                 {
-                    projectItems.Add(childProjectitem);
-                }
-                else
-                {
-                    //recursive call
-                    projectItems.AddRange(GetAllProjectItemsFromKind(childProjectitem, guid));
+                    if (childProjectitem == null)
+                    {
+                        continue;
+                    }
+
+                    if (childProjectitem.Kind == guid)
+                    {
+                        projectItems.Add(childProjectitem);
+                    }
+                    else
+                    {
+                        //recursive call
+                        projectItems.AddRange(GetAllProjectItemsFromKind(childProjectitem, guid));
+                    }
                 }
             }
 
